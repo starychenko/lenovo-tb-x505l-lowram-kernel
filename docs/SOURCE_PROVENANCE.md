@@ -1,5 +1,23 @@
 # Source provenance
 
+## r8-c2 source delta
+
+r8-c2 starts from the complete, already archived v1.2.0 source at
+`ca9f99dcda9bc0cf55271157d3a5718ed8cf6e3b` and ends at development commit
+`476936bf688`.
+
+The public consolidated patch and exact config are sufficient to reconstruct
+the c2 source from the archived r7 base without depending on a moving donor
+branch. The main compatible donor was
+`https://github.com/mi-sdm439/android_kernel_xiaomi_sdm439`; individual commit
+authorship remains in the r8 development history. The vDSO32 dependency series
+also traces back to Android/common and upstream arm64 work.
+
+No Lenovo firmware, vendor module, APK, device DT backup, serial/PSN data or
+private key was added to the patch or Git repository. The project
+reproducibility key is the same public build input already archived with the
+older releases; it is not Lenovo's production key.
+
 ## r7 final source
 
 The v1.2.0 source archive is the complete working tree at:

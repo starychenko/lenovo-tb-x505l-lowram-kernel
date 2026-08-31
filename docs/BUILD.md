@@ -1,5 +1,41 @@
 # Reproducing the kernel build
 
+## r8-c2 release-candidate build
+
+r8-c2 uses source commit `476936bf688`, or the exact r7 base
+`ca9f99dcda9bc0cf55271157d3a5718ed8cf6e3b` plus
+`patches/tb-x505l-r8-feature-pack-c2.patch`.
+
+```bash
+export TB_X505L_BUILD_TIMESTAMP='Mon Aug 31 19:15:00 UTC 2026'
+export TB_X505L_BUILD_VERSION=16
+export TB_X505L_BUILD_USER=codex-r8
+export TB_X505L_BUILD_HOST=tb-x505l
+export TB_X505L_BUILD_JOBS=8
+
+scripts/build-r8-candidate.sh \
+  /path/to/android_kernel_lenovo_4.9.337-r8 \
+  /path/to/clang-r365631c \
+  /path/to/aarch64-linux-android-4.9 \
+  configs/tb-x505l-r8-feature-pack-c2.config \
+  /fresh/output/r8-feature-pack-c2 \
+  /path/to/signing_key.pem \
+  /path/to/arm-linux-androideabi-4.9
+```
+
+Expected hashes:
+
+```text
+config          d0d68d6d28e3733840d55a452d76654b6b007cbb46793c35369015278e70cf90
+Image           60ea8530b56aee8bb64fe0b35a7d6942adf70d72670da824fceed59359e3e88b
+System.map      6e7ff57fdfa969b2b10ade133b2fad093e9811626094e229b804b8e7d63e0b10
+Module.symvers  5844ecfc61a6dee4ec2ec2b91659a0625528b0c883fd3f6c0dfdfb5ca8226a0d
+```
+
+The seventh argument is mandatory when `CONFIG_COMPAT_VDSO=y`. The helper
+refuses to silently omit the 32-bit toolchain. See `R8_ENGINEERING.md` for the
+runtime validation and release-candidate limits.
+
 ## r7 release build
 
 r7 uses the complete 4.9.337 source tree attached to v1.2.0 at commit

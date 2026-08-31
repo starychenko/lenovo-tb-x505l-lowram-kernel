@@ -1,10 +1,14 @@
 # Low-RAM ядро для Lenovo TB-X505L
 
 Це перевірене ядро Linux 4.9.337 для Lenovo Tab M10 HD TB-X505L з 2 ГБ
-RAM. Поточний r7 перевірено і постійно прошито на crDroid 9.10 Android 13
-PHH GSI та заводському Android 10 vendor.
+RAM. r7 лишається перевіреним і постійно прошитим релізом. Тимчасово
+завантажений кандидат r8-c2 додає Binder-кеші, compat vDSO32, BBR/Westwood,
+FQ/FQ-CoDel і KCAL.
 
-[Встановлення](docs/INSTALL.uk.md) · [Збірка](docs/BUILD.md) · [Розробка r7](docs/R7_ENGINEERING.md) · [Логи Camera HAL](docs/CAMERA_HAL_LOGGING.md) · [Розробка r6](docs/R6_ENGINEERING.md)
+[Встановлення](docs/INSTALL.uk.md) · [Збірка](docs/BUILD.md) · [Розробка r8](docs/R8_ENGINEERING.md) · [Розробка r7](docs/R7_ENGINEERING.md) · [Логи Camera HAL](docs/CAMERA_HAL_LOGGING.md)
+
+r8-c2 є pre-release кандидатом: він пройшов автоматичні та навантажувальні
+тести через `fastboot boot`, але ще не замінив r7 у постійному boot-розділі.
 
 ## Для якого пристрою
 

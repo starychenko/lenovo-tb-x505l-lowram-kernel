@@ -1,5 +1,25 @@
 # Changelog
 
+## r8-c2 / v1.3.0-rc1 - 2026-08-31
+
+- Added dedicated Binder caches for hot small-object allocations and complete
+  failure-path cleanup.
+- Backported the complete arm64 AArch32 compat-vDSO series and added a required
+  ARM32 GCC 4.9 input to the reproducible build helper.
+- Added BBR, Westwood, FQ and FQ-CoDel as built-in, selectable networking
+  options while retaining the existing defaults.
+- Added KCAL controls for the MDSS MDP v1.7 display path.
+- Proved that the live tablet is GPU speed bin 10 and deliberately did not ship
+  an unvalidated GPU overclock.
+- Temporarily booted c2 and passed 25-module, audio, Wi-Fi, two-camera,
+  accelerometer, Bluetooth, Binder, live vDSO32, KCAL and network-path checks.
+- Completed two native smoke repetitions, Android UI smoke tests and a
+  concurrent 512 MiB memory-pressure run without a kernel fault.
+- Added a reusable active validator that restores TCP, qdisc and Bluetooth
+  state even when a check fails.
+- Published the exact config, consolidated forward/reverse-checked patch,
+  build helper, curated evidence and engineering notes.
+
 ## r7 / v1.2.0 - 2026-08-31
 
 - Integrated the TB-X505L device line through CAF Linux 4.9.206 and 4.9.227

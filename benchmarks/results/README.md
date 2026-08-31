@@ -17,3 +17,7 @@ Raw local captures also contain screenshots, full telemetry and kernel logs.
 They are intentionally excluded from Git because logs can expose device-local
 identifiers and the PCMark APK is third-party copyrighted software. The source
 and wrappers required to reproduce the project-authored tests are published.
+
+`r8-c2/` contains the privacy-reviewed runtime, native, UI and 512 MiB pressure
+smoke evidence for the temporary-booted r8 feature pack. It is regression
+evidence only; it is not presented as a matched r7/r8 performance comparison.

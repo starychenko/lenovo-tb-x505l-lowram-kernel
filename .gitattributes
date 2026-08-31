@@ -1,7 +1,7 @@
 * text=auto eol=lf
 *.sh text eol=lf
 *.ps1 text eol=lf
-*.patch text eol=lf
+*.patch text eol=lf whitespace=-trailing-space,-space-before-tab
 *.config text eol=lf
 *.img binary
 *.gz binary

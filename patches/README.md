@@ -25,3 +25,18 @@ The c4 validation opened both camera IDs and repeated complete Camera2
 lifecycles. The previous unknown-object warning and its call trace were absent.
 See `docs/CAMERA_HAL_LOGGING.md` for the distinction between this kernel defect
 and the unrelated proprietary Camera HAL log noise.
+
+## r8 feature-pack patch
+
+`tb-x505l-r8-feature-pack-c2.patch` is the consolidated source delta from the
+exact r7 commit `ca9f99dcda9bc0cf55271157d3a5718ed8cf6e3b` to r8-c2 commit
+`476936bf688`. It includes Binder caches, the compat-vDSO32 series, KCAL and
+the two small build/style follow-ups. Networking algorithms were already
+present in the source and are enabled by the c2 config.
+
+The patch was checked forward in a detached worktree at the r7 base and in
+reverse against the r8-c2 tree. SHA-256:
+
+```text
+b543bd902b5a72308f3300dc762827fad40710c2ab04f32558f36d6f0fa4bb4a
+```

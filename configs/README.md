@@ -19,6 +19,12 @@
   v1.2.0 config. Its SHA-256 is
   `ddb6b6277eedc4f0c45c55a2196d1fb5ffb1fe15409e86a4568124d099845fac`.
   See `docs/R7_ENGINEERING.md`.
+- `tb-x505l-r8-feature-pack-c2.config` is the temporary-booted r8-c2 config.
+  It adds Binder/vDSO32 source support, BBR, Westwood, FQ, FQ-CoDel and KCAL
+  while retaining r7's 100 Hz, deadline and vendor-module compatibility base.
+  Its SHA-256 is
+  `d0d68d6d28e3733840d55a452d76654b6b007cbb46793c35369015278e70cf90`.
+  See `docs/R8_ENGINEERING.md`.
 
 Important delta:
 
@@ -35,5 +41,6 @@ CONFIG_LZ4_DECOMPRESS=y
 ```
 
 Do not merge fragments into an arbitrary Qualcomm 4.9 config and assume ABI
-compatibility. The final r7 config is tied to the complete 4.9.337 source at
-commit `ca9f99dcda9bc0cf55271157d3a5718ed8cf6e3b`; use them together.
+compatibility. The final r7 config is tied to source commit `ca9f99dc...`; the
+r8-c2 config is tied to `476936bf...` or the exact r7 base plus the published
+r8 patch.

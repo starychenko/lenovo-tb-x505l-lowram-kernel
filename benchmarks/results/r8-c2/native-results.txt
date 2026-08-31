@@ -1,0 +1,52 @@
+begin name=cpu-1t iteration=1 captured_utc=2026-08-31T17:56:48.2693650Z
+test=cpu threads=1 requested_s=4 elapsed_s=4.000331 iterations=666812416 iterations_per_s=166689330.502 checksum=18065764006154968728
+end name=cpu-1t iteration=1
+begin name=cpu-4t iteration=1 captured_utc=2026-08-31T17:56:56.7787501Z
+test=cpu threads=4 requested_s=4 elapsed_s=4.000141 iterations=2468233216 iterations_per_s=617036531.249 checksum=4014415384381227330
+end name=cpu-4t iteration=1
+begin name=memory iteration=1 captured_utc=2026-08-31T17:57:05.1531837Z
+test=memory size_mib=64 rounds=8 copy_mib_s=1608.398 read_mib_s=2354.347 write_mib_s=4842.705 checksum=1150096167056164744
+end name=memory iteration=1
+begin name=latency-same-idle iteration=1 captured_utc=2026-08-31T17:57:09.8579416Z
+test=latency mode=same-core samples=5000 load_threads=0 mean_us=17.482 p50_us=15.677 p95_us=20.365 p99_us=22.292 max_us=177.657 checksum=0
+end name=latency-same-idle iteration=1
+begin name=latency-cross-idle iteration=1 captured_utc=2026-08-31T17:57:14.5009651Z
+test=latency mode=cross-core samples=5000 load_threads=0 mean_us=29.490 p50_us=24.427 p95_us=28.281 p99_us=55.104 max_us=9659.791 checksum=0
+end name=latency-cross-idle iteration=1
+begin name=latency-same-loaded iteration=1 captured_utc=2026-08-31T17:57:19.1271039Z
+test=latency mode=same-core samples=5000 load_threads=4 mean_us=29.793 p50_us=19.375 p95_us=20.156 p99_us=22.031 max_us=11260.312 checksum=15160312101258620667
+end name=latency-same-loaded iteration=1
+begin name=latency-cross-loaded iteration=1 captured_utc=2026-08-31T17:57:23.8461475Z
+test=latency mode=cross-core samples=5000 load_threads=4 mean_us=49.913 p50_us=20.677 p95_us=22.552 p99_us=125.209 max_us=11209.323 checksum=8688661670566002286
+end name=latency-cross-loaded iteration=1
+begin name=cpu-1t iteration=2 captured_utc=2026-08-31T17:57:28.6412236Z
+test=cpu threads=1 requested_s=4 elapsed_s=4.000284 iterations=667222016 iterations_per_s=166793674.325 checksum=11836539418282191583
+end name=cpu-1t iteration=2
+begin name=cpu-4t iteration=2 captured_utc=2026-08-31T17:57:37.0550170Z
+test=cpu threads=4 requested_s=4 elapsed_s=4.000226 iterations=2480603136 iterations_per_s=620115765.443 checksum=11233422857974465607
+end name=cpu-4t iteration=2
+begin name=memory iteration=2 captured_utc=2026-08-31T17:57:45.4120248Z
+test=memory size_mib=64 rounds=8 copy_mib_s=1888.831 read_mib_s=2457.497 write_mib_s=4841.393 checksum=1150096167056164744
+end name=memory iteration=2
+begin name=latency-same-idle iteration=2 captured_utc=2026-08-31T17:57:50.0542914Z
+test=latency mode=same-core samples=5000 load_threads=0 mean_us=17.555 p50_us=18.958 p95_us=20.417 p99_us=22.031 max_us=144.479 checksum=0
+end name=latency-same-idle iteration=2
+begin name=latency-cross-idle iteration=2 captured_utc=2026-08-31T17:57:54.6870412Z
+test=latency mode=cross-core samples=5000 load_threads=0 mean_us=37.126 p50_us=24.896 p95_us=44.062 p99_us=98.593 max_us=8406.250 checksum=0
+end name=latency-cross-idle iteration=2
+begin name=latency-same-loaded iteration=2 captured_utc=2026-08-31T17:57:59.3542817Z
+test=latency mode=same-core samples=5000 load_threads=4 mean_us=30.344 p50_us=19.271 p95_us=20.104 p99_us=22.969 max_us=9762.813 checksum=4972392449069223541
+end name=latency-same-loaded iteration=2
+begin name=latency-cross-loaded iteration=2 captured_utc=2026-08-31T17:58:04.0509392Z
+test=latency mode=cross-core samples=5000 load_threads=4 mean_us=51.961 p50_us=20.520 p95_us=22.187 p99_us=83.959 max_us=10368.177 checksum=4223202705522296828
+end name=latency-cross-loaded iteration=2
+begin name=io iteration=1 captured_utc=2026-08-31T17:58:08.8551510Z
+test=io-sequential size_mib=64 direct=1 write_mib_s=81.313 read_mib_s=277.429
+test=io-random operation=read block_kib=4 operations=512 mean_us=142.892 p50_us=131.198 p95_us=199.531 p99_us=293.021 max_us=1980.885 iops=6998.273
+test=io-random operation=write block_kib=4 operations=512 mean_us=412.520 p50_us=400.208 p95_us=537.292 p99_us=919.792 max_us=1688.489 iops=2424.124
+end name=io iteration=1
+begin name=io iteration=2 captured_utc=2026-08-31T17:58:14.7644500Z
+test=io-sequential size_mib=64 direct=1 write_mib_s=73.927 read_mib_s=268.625
+test=io-random operation=read block_kib=4 operations=512 mean_us=148.480 p50_us=131.823 p95_us=203.334 p99_us=290.000 max_us=1727.604 iops=6734.903
+test=io-random operation=write block_kib=4 operations=512 mean_us=584.321 p50_us=402.760 p95_us=742.552 p99_us=7253.594 max_us=10240.364 iops=1711.387
+end name=io iteration=2

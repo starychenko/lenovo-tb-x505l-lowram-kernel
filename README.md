@@ -1,10 +1,11 @@
 # Lenovo TB-X505L low-RAM kernel
 
 Validated Linux 4.9.337 kernel work for the 2 GB RAM Lenovo Tab M10 HD
-TB-X505L. The current r7 build was qualified and permanently installed on
-crDroid 9.10 Android 13 PHH GSI with the stock Android 10 vendor partition.
+TB-X505L. r7 remains the qualified, permanently installed release. The r8-c2
+development candidate adds Binder caches, compat vDSO32, BBR/Westwood,
+FQ/FQ-CoDel and KCAL and has completed temporary-boot qualification.
 
-[Українська версія](README.uk.md) · [Installation](docs/INSTALL.md) · [Build](docs/BUILD.md) · [r7 engineering](docs/R7_ENGINEERING.md) · [Camera HAL logging](docs/CAMERA_HAL_LOGGING.md) · [r6 engineering](docs/R6_ENGINEERING.md) · [Archive inventory](docs/ARCHIVE_INVENTORY.md)
+[Українська версія](README.uk.md) · [Installation](docs/INSTALL.md) · [Build](docs/BUILD.md) · [r8 engineering](docs/R8_ENGINEERING.md) · [r7 engineering](docs/R7_ENGINEERING.md) · [Camera HAL logging](docs/CAMERA_HAL_LOGGING.md) · [Archive inventory](docs/ARCHIVE_INVENTORY.md)
 
 ## Read this first
 
@@ -36,6 +37,10 @@ The stock Lenovo boot image and proprietary vendor modules are deliberately not 
 | Android task policy | ROM defaults | optional, reversible measured EAS/schedutil profile |
 
 The release keeps the stock device tree, boot header, command line and empty ramdisk. Only the kernel payload changes.
+
+The optional r8-c2 pre-release extends r7 without changing those boot-format
+constraints. It is documented separately because it has only been loaded with
+`fastboot boot`; the stable quick-start instructions below still point to r7.
 
 ## Why this exists
 
