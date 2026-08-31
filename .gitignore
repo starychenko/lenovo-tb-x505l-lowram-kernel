@@ -29,6 +29,8 @@
 *.webp
 
 # Editor and operating-system files
+__pycache__/
+*.py[cod]
 .idea/
 .vscode/
 .DS_Store

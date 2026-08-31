@@ -1,0 +1,12 @@
+kernel=4.9.337-tbx505l-r8-c9-oc3645-cpu1305+
+boot_completed=1
+boot_partition_sha256=773611c66e7458529446c05aa974c25d4c4cef8a7d49329af40bd3ea1f75b4ce
+gpu_available_frequencies=364500000 320000000
+gpu_max=364500000
+cpu_available_frequencies=1305600 1497600 1708800 1958400 2016000
+cpu_scaling_min=1305600
+cpu_info_max=2016000
+loaded_modules=25
+audio_card=sdm439-snd-card-mtp
+wlan0=up
+critical_dmesg_matches=0

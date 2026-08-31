@@ -67,3 +67,12 @@ rollback boundaries instead of publishing another opaque full-tree diff.
 Applying it in a temporary Git index produced the exact c8 tree
 `bff54dc04e870882f0cac4c5b953d73553c30681`. See the directory README and
 `SHA256SUMS` for the complete manifest.
+
+## r8 c9 CPU/GPU patch
+
+`r8-c9/` contains the single incremental mail patch from c8 commit
+`40a804803797` to final c9 commit `0ea8dc3e3414`. It raises the SDM429 CPU
+floor from 960 to 1305.6 MHz, adds the qualified 364.5 MHz speed-bin 10 GPU
+level and adds the corresponding fractional GPLL3 entry. Applying it to c8 in
+a temporary Git index reproduced c9 tree
+`88f8929f885b45ec856f746a0a3f350efc1d40de` exactly.

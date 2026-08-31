@@ -45,6 +45,16 @@
 - `tb-x505l-r8-c8-thinlto.config` is the exact permanently qualified c8
   ThinLTO config. SHA-256:
   `06571aa81ec85ee3a781d7439816859b36338ade28f00c3608acb06c893deb2f`.
+- `tb-x505l-r8-c9-oc3645-cpu1305.config` is the exact final v1.4.0 config.
+  It retains c8 ThinLTO and changes the local-version identity for the source
+  and DTB changes that raise the CPU floor to 1305.6 MHz and add the qualified
+  364.5 MHz GPU level. SHA-256:
+  `174a1ef87b42f87576ca62420533fffb3aff18afcd96844074c55443cd7588e6`.
+
+The rejected 360/400/432 local-version configs are preserved under
+`historical/gpu-oc-candidates/`. Frequency policy is implemented by source and
+DTB, not Kconfig, so those files are engineering identities rather than
+standalone overclock profiles.
 
 Low-RAM base delta retained by every later candidate:
 
@@ -62,7 +72,7 @@ CONFIG_LZ4_DECOMPRESS=y
 
 Do not merge fragments into an arbitrary Qualcomm 4.9 config and assume ABI
 compatibility. The final r7 config is tied to source commit `ca9f99dc...`; the
-r8-c2 is tied to `476936bf...`; c3 is tied to `45a98eac...`; final c8 is tied
-to `40a804803797...`. Reconstruct c8 from the exact r7 base by applying the c2
-patch, the c3 incremental patch and then the ordered `patches/r8-c4-c8/`
-series.
+r8-c2 is tied to `476936bf...`; c3 is tied to `45a98eac...`; c8 is tied to
+`40a804803797...`; final c9 is tied to `0ea8dc3e3414...`. Reconstruct c9 from
+the exact r7 base by applying the c2 patch, the c3 incremental patch, the
+ordered `patches/r8-c4-c8/` series and then `patches/r8-c9/`.

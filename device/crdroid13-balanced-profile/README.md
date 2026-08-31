@@ -109,5 +109,7 @@ the kernel ABI unchanged and applies that reversible runtime policy instead of
 compiling out `SCHEDSTATS`/`SCHED_INFO`.
 
 The same nine production values were read back by the full validator after the
-permanent r8-c8 boot. This confirms application of the profile on c8; it is not
-a new PCMark or battery-life measurement.
+permanent r8-c8 boot and again from the final permanently flashed r8-c9 boot.
+The r8 identity guard accepts c9 and the post-boot log reported
+`profile=balanced-ui status=applied`. This confirms application of the profile;
+it is not a new PCMark or battery-life measurement.

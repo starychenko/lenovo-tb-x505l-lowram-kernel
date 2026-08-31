@@ -5,7 +5,7 @@
 The qualified system combines components from different Android generations:
 
 - Lenovo Android 10 vendor partition and proprietary firmware;
-- Linux 4.9.337 r8-c8 kernel, with r7 retained as the stable fallback, and
+- Linux 4.9.337 final r8-c9 kernel, with r7 retained as the conservative fallback, and
   compatibility for the shipping 4.9.205-era vendor modules;
 - crDroid 9.10 Android 13 PHH GSI system image (with the original Android 11
   qualification retained in `VALIDATION.md`);
@@ -14,6 +14,11 @@ The qualified system combines components from different Android generations:
 The kernel work first aligned the vendor kernel with modern userspace memory
 management, then carried that device behavior forward to 4.9.337 without
 replacing the known-working Lenovo hardware modules.
+
+r8-c9 additionally changes device frequency policy: the lowest exposed CPU
+level is 1305.6 MHz, the maximum remains 2016 MHz, and speed-bin 10 gains a
+measured 364.5 MHz GPU level above 320 MHz. The clock, voltage-corner, bus-vote
+and rejected-candidate details are in [GPU_OVERCLOCK.md](GPU_OVERCLOCK.md).
 
 ## Memory-management design
 

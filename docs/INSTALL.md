@@ -18,21 +18,21 @@ GitHub Release:
 
 - stable fallback: `tb-x505l-lowram-r7-boot.img` from
   [v1.2.0](https://github.com/starychenko/lenovo-tb-x505l-lowram-kernel/releases/tag/v1.2.0);
-- current pre-release: `tb-x505l-r8-c8-thinlto-boot.img` from
-  [v1.4.0-rc1](https://github.com/starychenko/lenovo-tb-x505l-lowram-kernel/releases/tag/v1.4.0-rc1).
+- current stable: `tb-x505l-r8-c9-oc3645-cpu1305-boot.img` from
+  [v1.4.0](https://github.com/starychenko/lenovo-tb-x505l-lowram-kernel/releases/tag/v1.4.0).
 
 On PowerShell:
 
 ```powershell
 Get-FileHash -Algorithm SHA256 .\tb-x505l-lowram-r7-boot.img
-Get-FileHash -Algorithm SHA256 .\tb-x505l-r8-c8-thinlto-boot.img
+Get-FileHash -Algorithm SHA256 .\tb-x505l-r8-c9-oc3645-cpu1305-boot.img
 ```
 
 Expected hashes:
 
 ```text
 r7     4c30c952703b5d509953a06c4a66cfee60f08395f06555e2e5027623b9846cc3
-r8-c8  b0186ee9d2968051af7224802f8c040332f7672324779f3c91c7f31534d555bf
+r8-c9  773611c66e7458529446c05aa974c25d4c4cef8a7d49329af40bd3ea1f75b4ce
 ```
 
 The image is exactly 67,108,864 bytes.
@@ -64,10 +64,10 @@ fastboot devices
 fastboot boot tb-x505l-lowram-r7-boot.img
 ```
 
-For the current c8 pre-release, use the same flow with:
+For final r8-c9, use the same flow with:
 
 ```text
-fastboot boot tb-x505l-r8-c8-thinlto-boot.img
+fastboot boot tb-x505l-r8-c9-oc3645-cpu1305-boot.img
 ```
 
 `fastboot boot` loads the image into memory without writing the boot partition. Wait for Android to complete startup, then verify:
@@ -95,10 +95,11 @@ adb shell "cat /proc/modules | wc -l"
 
 Expected kernel identity is
 `4.9.337-tbx505l-r7-4.9.337-compat-vendor+ #14` for r7 or
-`4.9.337-tbx505l-r8-c8-thinlto+ #22` for c8. Both require 25 loaded modules,
+`4.9.337-tbx505l-r8-c9-oc3645-cpu1305+ #28` for c9. Both require 25 loaded modules,
 audio card `sdm439-snd-card-mtp`, active `wlan0`, `[lz4]`, KSM value `1` and
-`[deadline]`. c8 additionally exposes `bfq` in the scheduler list and reads
-`1000` from `/sys/class/kgsl/kgsl-3d0/pmqos_active_latency`.
+`[deadline]`. c9 additionally exposes `bfq`, reads `1000` from
+`/sys/class/kgsl/kgsl-3d0/pmqos_active_latency`, reports GPU levels
+`364500000 320000000` and reports `1305600` as the CPU minimum.
 
 ## Permanent installation
 
@@ -111,10 +112,10 @@ fastboot flash boot tb-x505l-lowram-r7-boot.img
 fastboot reboot
 ```
 
-For c8, flash only the image that already passed the temporary test:
+For c9, flash only the image that already passed the temporary test:
 
 ```text
-fastboot flash boot tb-x505l-r8-c8-thinlto-boot.img
+fastboot flash boot tb-x505l-r8-c9-oc3645-cpu1305-boot.img
 fastboot reboot
 ```
 
@@ -126,7 +127,10 @@ adb shell "dd if=/dev/block/by-name/boot bs=1048576 2>/dev/null | sha256sum"
 ```
 
 It must print the full hash of the selected image: `4c30c952...46cc3` for r7
-or `b0186ee9...55bf` for c8.
+or `773611c6...b4ce` for c9.
+
+r8-c9 changes CPU/GPU frequency policy. Do not skip the temporary boot and
+hardware/thermal check, even if an older r7 or c8 image worked on the device.
 
 ## Optional Android 13 responsiveness profile
 

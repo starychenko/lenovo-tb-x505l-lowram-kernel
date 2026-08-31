@@ -1,5 +1,63 @@
 # Reproducing the kernel build
 
+## r8-c9 final v1.4.0 build
+
+r8-c9 uses source commit
+`0ea8dc3e34140ac48640f23dacf8b9a04fd2b26e`, tree
+`88f8929f885b45ec856f746a0a3f350efc1d40de`. Apply `patches/r8-c9/` after
+the exact r8-c8 state, or use the complete v1.4.0 source archive.
+
+```bash
+export TB_X505L_BUILD_TIMESTAMP='Tue Sep 1 03:25:00 UTC 2026'
+export TB_X505L_BUILD_VERSION=28
+export TB_X505L_BUILD_USER=codex-r8
+export TB_X505L_BUILD_HOST=tb-x505l
+export TB_X505L_BUILD_JOBS=8
+export TB_X505L_LDGOLD=/usr/bin/aarch64-linux-gnu-ld.gold
+
+scripts/build-r8-candidate.sh \
+  /home/evgen/tb-x505l-r7/git/android_kernel_lenovo_4.9.337 \
+  /home/evgen/tb-x505l-r6/toolchains/clang-r365631c \
+  /home/evgen/tb-x505l-r6/toolchains/aarch64-linux-android-4.9 \
+  configs/tb-x505l-r8-c9-oc3645-cpu1305.config \
+  /home/evgen/tb-x505l-r7/build/r8-c9-oc432-gpll6-gfx \
+  /path/to/signing_key.pem \
+  /home/evgen/tb-x505l-r6/toolchains/arm-linux-androideabi-4.9
+```
+
+The output-directory name is historical: the qualified c9 build reused the
+output location of a rejected GPLL6 experiment. The source commit, config,
+build identity and resulting hashes below define the release; no
+rejected GPLL6 source remained in the final tree. Use the same absolute paths
+when attempting a byte-identical legacy-kernel build.
+
+Expected hashes:
+
+```text
+config          174a1ef87b42f87576ca62420533fffb3aff18afcd96844074c55443cd7588e6
+Image           7970d89029da7761bd1280fbb75f9b8ecf7b6aa233d94bd1837579f7890f17fd
+System.map      3188271872944fd3df77c5126ff1eadd79c19fb8991be9e3a78ae3a4662500cc
+Module.symvers  c5c30705a62e06a5ca65c9404eac1decab8b5991186ce935fd32e5c60f13e7d9
+compile.h       8e4192fc39e925de53a5a272053e941813883beee55f452d5f9cf3c122f33c26
+kernel_dtb      7992d0c4c960bd959dcfb8fa2638834cb00c2e9111e279beb527fa4befe78661
+boot.img        773611c66e7458529446c05aa974c25d4c4cef8a7d49329af40bd3ea1f75b4ce
+```
+
+The final `kernel_dtb` is created from the concatenated DTB extracted from the
+owner's matching boot image:
+
+```bash
+python3 scripts/patch-oc-kernel-dtb.py \
+  extracted/kernel_dtb \
+  build/kernel_dtb-oc3645-cpu1305
+```
+
+The script's safe default is 364.5 MHz and it verifies the SDM429 MTP model,
+speed-bin 10 layout and original frequency tables. Pass the resulting DTB to
+`scripts/repack-boot-on-device.ps1 -KernelDtb`; the helper verifies the DTB
+transfer hash before repacking. Repacking still requires the owner's own exact
+matching boot image.
+
 ## r8-c8 ThinLTO release-candidate build
 
 r8-c8 uses source commit

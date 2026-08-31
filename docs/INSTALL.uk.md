@@ -15,19 +15,19 @@ GitHub Release:
 
 - stable-відкат: `tb-x505l-lowram-r7-boot.img` із
   [v1.2.0](https://github.com/starychenko/lenovo-tb-x505l-lowram-kernel/releases/tag/v1.2.0);
-- поточний pre-release: `tb-x505l-r8-c8-thinlto-boot.img` із
-  [v1.4.0-rc1](https://github.com/starychenko/lenovo-tb-x505l-lowram-kernel/releases/tag/v1.4.0-rc1).
+- поточний стабільний: `tb-x505l-r8-c9-oc3645-cpu1305-boot.img` із
+  [v1.4.0](https://github.com/starychenko/lenovo-tb-x505l-lowram-kernel/releases/tag/v1.4.0).
 
 ```powershell
 Get-FileHash -Algorithm SHA256 .\tb-x505l-lowram-r7-boot.img
-Get-FileHash -Algorithm SHA256 .\tb-x505l-r8-c8-thinlto-boot.img
+Get-FileHash -Algorithm SHA256 .\tb-x505l-r8-c9-oc3645-cpu1305-boot.img
 ```
 
 Очікувані SHA-256:
 
 ```text
 r7     4c30c952703b5d509953a06c4a66cfee60f08395f06555e2e5027623b9846cc3
-r8-c8  b0186ee9d2968051af7224802f8c040332f7672324779f3c91c7f31534d555bf
+r8-c9  773611c66e7458529446c05aa974c25d4c4cef8a7d49329af40bd3ea1f75b4ce
 ```
 
 Розмір: 67 108 864 байти.
@@ -52,10 +52,10 @@ adb reboot bootloader
 fastboot boot tb-x505l-lowram-r7-boot.img
 ```
 
-Для поточного c8 pre-release команда така:
+Для фінального c9 команда така:
 
 ```text
-fastboot boot tb-x505l-r8-c8-thinlto-boot.img
+fastboot boot tb-x505l-r8-c9-oc3645-cpu1305-boot.img
 ```
 
 Ця команда нічого не записує. Перевірте тач, жести, Wi-Fi, звук, обидві камери, мікрофон, заряджання та sleep/wake.
@@ -71,11 +71,11 @@ adb shell cat /sys/block/zram0/comp_algorithm
 adb shell cat /sys/kernel/mm/ksm/run
 ```
 
-Для r7 має бути `4.9.337-tbx505l-r7-4.9.337-compat-vendor+ #14`, для c8 -
-`4.9.337-tbx505l-r8-c8-thinlto+ #22`. Для обох очікуються 25 модулів,
-аудіокарта `sdm439-snd-card-mtp`, `[lz4]`, KSM `1` і `[deadline]`. У c8 список
-I/O scheduler також містить `bfq`, а
-`/sys/class/kgsl/kgsl-3d0/pmqos_active_latency` повертає `1000`.
+Для r7 має бути `4.9.337-tbx505l-r7-4.9.337-compat-vendor+ #14`, для c9 -
+`4.9.337-tbx505l-r8-c9-oc3645-cpu1305+ #28`. Для обох очікуються 25 модулів,
+аудіокарта `sdm439-snd-card-mtp`, `[lz4]`, KSM `1` і `[deadline]`. У c9 список
+I/O scheduler також містить `bfq`, `pmqos_active_latency` повертає `1000`, GPU
+показує `364500000 320000000`, а мінімальна CPU-частота - `1305600`.
 
 ## Постійна прошивка
 
@@ -87,10 +87,10 @@ fastboot flash boot tb-x505l-lowram-r7-boot.img
 fastboot reboot
 ```
 
-Для c8 прошивайте лише вже перевірений тимчасовим запуском образ:
+Для c9 прошивайте лише вже перевірений тимчасовим запуском образ:
 
 ```text
-fastboot flash boot tb-x505l-r8-c8-thinlto-boot.img
+fastboot flash boot tb-x505l-r8-c9-oc3645-cpu1305-boot.img
 fastboot reboot
 ```
 
@@ -102,7 +102,10 @@ adb shell "dd if=/dev/block/by-name/boot bs=1048576 2>/dev/null | sha256sum"
 ```
 
 Результат має повністю збігатись із SHA-256 обраного образу:
-`4c30c952...46cc3` для r7 або `b0186ee9...55bf` для c8.
+`4c30c952...46cc3` для r7 або `773611c6...b4ce` для c9.
+
+r8-c9 змінює частотну політику CPU/GPU. Не пропускайте тимчасовий запуск і
+перевірку заліза та температур, навіть якщо r7 або c8 раніше працювали.
 
 ## Додатковий профіль швидкодії Android 13
 

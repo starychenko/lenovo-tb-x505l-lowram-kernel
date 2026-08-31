@@ -1,7 +1,7 @@
 # TB-X505L benchmark suite
 
 The harness originated during r6 and remains the project benchmark suite
-through r8-c8. It does not use one aggregate score as proof; it separates the
+through final r8-c9. It does not use one aggregate score as proof; it separates the
 subsystems changed by each experiment and records workload-specific
 regressions as well as gains.
 
@@ -46,6 +46,17 @@ PCMark Work 3.1 remains useful because it drives complete Android application
 paths. Storage 2.1 covers app-private storage, shared storage and SQLite.
 Neither score identifies scheduler latency, memory bandwidth or the power cost
 of a tuning change, so PCMark is used alongside the native and UI suites.
+
+## GPU fragment benchmark
+
+`gpu/tbx-gpu-bench.c` uses an off-screen EGL pbuffer and a deterministic
+64-iteration fragment shader. `glFinish()` after every frame prevents the
+tile-based Adreno driver from discarding overwritten work. It was added for
+r8-c9 to distinguish a real clock change from a modified software label.
+
+The final 364.5 MHz candidate was also monitored through KGSL and GCC debugfs
+while running the benchmark. This workload covers fragment ALU throughput; it
+does not prove equal gains in geometry, memory bandwidth or complete apps.
 
 ## Comparison rules
 

@@ -1,4 +1,4 @@
-# Measured performance dynamics from r5 to r8-c8
+# Measured performance dynamics from r5 to final r8-c9
 
 ## Short answer
 
@@ -11,6 +11,8 @@ is:
 - the r6 storage/runtime work produced the clearest application-level gain;
 - memory behavior and kernel maintainability improved more than headline
   benchmark scores;
+- r8-c9 adds a directly measured 13.86% gain in one fragment-ALU GPU workload,
+  not a 13.86% whole-system claim;
 - NewPipe and eMMC write results remain mixed.
 
 ## Development stages
@@ -23,6 +25,22 @@ is:
 | r8-c2 | Binder/vDSO/network/KCAL feature pack | New useful paths verified; no general speed claim |
 | r8-c3 | Scheduler/reclaim/compaction/I2C fast paths plus corrected production profile | Cross-core loaded mean -21.82% and p99 -63.17% vs c2 in two native runs; Cromite mean -6.08% and Settings p95/p99 about -36% in the production UI run |
 | r8-c8 | Scheduler/KGSL, ARM64/mremap, optional BFQ and A53 ThinLTO | vs c4/c5 baseline: typical same-core wake latency -5.5% to -8.6%, cross-core p50/p95/p99 -4.9%/-5.8%/-19.7%; eMMC tails remain mixed |
+| r8-c9 | 1305.6 MHz CPU floor and exact 364.5 MHz GPLL3 GPU level | GPU fragment test 14.463 vs 12.702 FPS at 320 MHz (+13.86%); mixed four-thread CPU/GPU stress held 364.5 MHz and peaked at 54 C |
+
+## c9 GPU result
+
+The project-authored EGL/GLES benchmark ran the same 768x768, 64-iteration
+fragment workload at both clock levels. Five final runs ranged from 14.459 to
+14.468 FPS and averaged 14.463 FPS. A 600-frame run produced 14.458 FPS; a
+second long run completed alongside 45 seconds of four-thread CPU load at
+14.496 FPS.
+
+GCC debugfs measured the active branch at approximately
+364.498-364.503 MHz, so the gain is not a renamed 320 MHz level. The mixed test
+peaked at 54 C and post-test logs contained no GPU fault, reset, stuck clock,
+watchdog, Oops, BUG or Call trace. See
+[GPU_OVERCLOCK.md](GPU_OVERCLOCK.md) for the donor/fuse investigation and why
+400/432 MHz candidates were rejected.
 
 ## c8 targeted compiler result
 

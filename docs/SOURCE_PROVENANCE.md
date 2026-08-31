@@ -1,5 +1,27 @@
 # Source provenance
 
+## r8-c9 final source state
+
+r8-c9 starts at the qualified c8 commit
+`40a80480379791338dfacb3d8a2b3d755c655bad` and ends at
+`0ea8dc3e34140ac48640f23dacf8b9a04fd2b26e`, tree
+`88f8929f885b45ec856f746a0a3f350efc1d40de`.
+
+`patches/r8-c9/` contains the one incremental mail patch and SHA-256 manifest.
+Applying it to c8 in a temporary Git index produced the exact c9 tree ID. The
+v1.4.0 release contains the complete archive
+`tb-x505l-r8-c9-source.tar.gz`; `git get-tar-commit-id` reads the exact c9
+commit from the archive. It contains 65,748 entries and has SHA-256:
+
+```text
+6da1e067eca9f5a64789bbd8759591c97c9e93ce063cf7606da67e8cda015c74
+```
+
+The archive is a clean `git archive`: no `.git` object database, build output,
+device backup, Lenovo firmware, vendor module or APK is included. Images under
+the kernel's own `Documentation/` tree are upstream documentation assets, not
+device photographs or local captures.
+
 ## r8-c8 source state
 
 r8-c8 starts at the qualified c3 commit
@@ -133,7 +155,7 @@ branch.
 
 ## Release source archives
 
-The r5 and r7 releases plus v1.4.0-rc1 include complete corresponding source
+The r5, r7, v1.4.0-rc1 and final v1.4.0 releases include complete corresponding source
 tarballs rather than only links to external branches. r6 reuses the archived
 r5 source with its own config, while the c2/c3 pre-releases are reconstructable
 from the archived r7 source plus their exact published patches. The r5/r6
@@ -159,9 +181,13 @@ The v1.2.0 archive independently preserves the final 4.9.337 tree at
 It was created with `git archive` directly from that clean commit. Its checksum
 is included in the release `SHA256SUMS.txt`.
 
-The v1.4.0-rc1 archive independently preserves the final c8 tree at
+The v1.4.0-rc1 archive independently preserves the c8 tree at
 `40a804803797...`; the release manifest covers that archive, the flashable
 image, raw build outputs, patch series and privacy-reviewed evidence.
+
+The final v1.4.0 archive independently preserves the c9 tree at
+`0ea8dc3e3414...`; its release manifest also covers the exact patched DTB,
+boot image, raw build outputs, combined c4-c9 patch series and GPU/ABI evidence.
 
 No `.git` object database, build output, Lenovo firmware, proprietary module or
 device backup is placed in the source archive. Git commit IDs and the full

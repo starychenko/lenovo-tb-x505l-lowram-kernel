@@ -1,11 +1,11 @@
 # Lenovo TB-X505L low-RAM kernel
 
 Validated Linux 4.9.337 kernel work for the 2 GB RAM Lenovo Tab M10 HD
-TB-X505L. r7 remains the stable fallback. The permanently tested r8-c8
-pre-release extends the r8 feature pack with scheduler/KGSL latency work,
-optimized ARM64 paths, optional BFQ and an A53-targeted ThinLTO build.
+TB-X505L. The final v1.4.0 image is r8-c9: the qualified r8 scheduler/KGSL,
+ARM64, optional BFQ and A53 ThinLTO work plus a measured 364.5 MHz GPU level
+and a 1305.6 MHz CPU floor. r7 remains the conservative rollback image.
 
-[Українська версія](README.uk.md) · [Installation](docs/INSTALL.md) · [Build](docs/BUILD.md) · [r8 engineering](docs/R8_ENGINEERING.md) · [Kernel roadmap](docs/KERNEL_ROADMAP.uk.md) · [Performance dynamics](docs/PERFORMANCE_DYNAMICS.md) · [r7 engineering](docs/R7_ENGINEERING.md) · [Camera HAL logging](docs/CAMERA_HAL_LOGGING.md) · [Archive inventory](docs/ARCHIVE_INVENTORY.md)
+[Українська версія](README.uk.md) · [Installation](docs/INSTALL.md) · [Build](docs/BUILD.md) · [GPU clock investigation](docs/GPU_OVERCLOCK.md) · [r8 engineering](docs/R8_ENGINEERING.md) · [Kernel roadmap](docs/KERNEL_ROADMAP.uk.md) · [Performance dynamics](docs/PERFORMANCE_DYNAMICS.md) · [r7 engineering](docs/R7_ENGINEERING.md) · [Camera HAL logging](docs/CAMERA_HAL_LOGGING.md) · [Archive inventory](docs/ARCHIVE_INVENTORY.md)
 
 ## Read this first
 
@@ -38,11 +38,13 @@ The stock Lenovo boot image and proprietary vendor modules are deliberately not 
 
 The release keeps the stock device tree, boot header, command line and empty ramdisk. Only the kernel payload changes.
 
-The r8-c8 pre-release extends r7 without changing those boot-format
-constraints. BFQ is available but `deadline` remains the default. The live GPU
-remains at its validated 320 MHz speed-bin level. c8 passed temporary and
-permanent boot, boot-partition readback, hardware, stress and
-production-profile validation on the tested tablet.
+The final r8-c9 release extends r7 without changing those boot-format
+constraints. BFQ is available but `deadline` remains the default. c9 raises
+the lowest CPU level from 960 to 1305.6 MHz while retaining the 2016 MHz
+maximum, and adds a real measured 364.5 MHz GPU level above the retained
+320 MHz level. It passed temporary and permanent boot, exact boot-partition
+readback, hardware, ABI, GPU, mixed CPU/GPU stress and production-profile
+validation on the tested tablet.
 
 ## Why this exists
 
@@ -74,8 +76,8 @@ This is a real security trade-off. Read [SECURITY.md](SECURITY.md) and the kerne
 
 ## Tested result
 
-The final r7 image and the current r8-c8 candidate each completed temporary
-boot before permanent flashing. The following were verified on c8:
+The final r7 and r8-c9 images each completed temporary boot before permanent
+flashing. The following were verified on c9:
 
 - all 25 required Lenovo modules loaded;
 - audio card, speakers, Wi-Fi, front/rear cameras, touch and gestures;
@@ -85,15 +87,18 @@ boot before permanent flashing. The following were verified on c8:
 - repeated Android launch and Settings-scroll comparisons;
 - Bluetooth OFF -> ON -> OFF, active accelerometer and two camera devices;
 - repeated camera lifecycles after the PM QoS fix;
-- c8 boot-partition readback exactly matched its published SHA-256;
+- c9 boot-partition readback exactly matched its published SHA-256;
 - the first permanent-boot dmesg fault scan was clean;
 - the Goodix touchscreen uses the changed Qualcomm I2C v2 path and
   `compact_unevictable_allowed=0` is live;
-- the corrected balanced profile applied at the PHH hook and again after boot.
+- the corrected balanced profile applied at the PHH hook and again after boot;
 - BFQ v8r10 is selectable while `deadline` remains selected after boot;
 - ThinLTO/A53 config, the SDM429 KGSL 1000 us active-latency vote and all 25
   vendor-module symbol requirements passed the final validator;
 - two 256 MiB workers completed 16 memory rounds without an OOM or kernel fault.
+- the GPU branch measured 364.498-364.503 MHz under load, five short runs
+  averaged 14.463 FPS versus 12.702 FPS at 320 MHz, and concurrent four-thread
+  CPU plus GPU stress peaked at 54 C without a GPU fault or clock reset.
 
 The r7 work preserves the complete 4.9.206 -> 4.9.227 -> 4.9.337 integration
 history, module ABI audit, custom subsystem benchmarks, UI controls, a 700 MiB
@@ -103,41 +108,39 @@ limits. r6 and the original r5 qualification remain documented separately.
 
 ## Quick start
 
-1. Download `tb-x505l-lowram-r7-boot.img` from the latest stable release, or
-   `tb-x505l-r8-c8-thinlto-boot.img` from the explicitly labelled pre-release,
-   together with `SHA256SUMS.txt`.
+1. Download `tb-x505l-r8-c9-oc3645-cpu1305-boot.img` from the latest stable
+   release together with `SHA256SUMS.txt`. Keep your own boot backup; the older
+   `tb-x505l-lowram-r7-boot.img` remains available from v1.2.0 as a conservative
+   project fallback for the exact tested vendor.
 2. Verify the SHA-256 checksum.
 3. Back up your own boot partition.
 4. Test without flashing:
 
 ```text
 adb reboot bootloader
-fastboot boot tb-x505l-lowram-r7-boot.img
+fastboot boot tb-x505l-r8-c9-oc3645-cpu1305-boot.img
 ```
-
-For the c8 pre-release selected in step 1, use
-`fastboot boot tb-x505l-r8-c8-thinlto-boot.img` instead.
 
 5. Verify all hardware. Only then flash permanently:
 
 ```text
 adb reboot bootloader
-fastboot flash boot tb-x505l-lowram-r7-boot.img
+fastboot flash boot tb-x505l-r8-c9-oc3645-cpu1305-boot.img
 fastboot reboot
 ```
 
-For c8, substitute `tb-x505l-r8-c8-thinlto-boot.img`. Never flash a candidate
-that did not first complete the temporary hardware test.
+Never flash an image that did not first complete the temporary hardware test
+on the same device and vendor build.
 
 The tested tablet has a faulty Volume Up button, so all recovery-safe paths use `adb reboot bootloader` when Android is still available. Full instructions and rollback steps are in [docs/INSTALL.md](docs/INSTALL.md).
 
 ## Repository contents
 
 - `configs/` - exact baseline, candidate and final kernel configurations.
-- `benchmarks/` - the native AArch64 CPU/RAM/latency/I/O benchmark source.
+- `benchmarks/` - native AArch64 CPU/RAM/latency/I/O and EGL/GLES GPU benchmark source.
 - `analysis/` - generic module ABI and upstream-snapshot investigation tools.
-- `patches/` - validated older deltas plus the ordered, independently
-  reviewable r8 c4-c8 patch series.
+- `patches/` - validated older deltas, the ordered r8 c4-c8 series and the
+  independently reproducible c9 CPU/GPU patch.
 - `device/` - the PHH low-RAM hook and reversible Android 13 runtime profile.
 - `firmware/` - exact factory-package identity and checksum metadata.
 - `historical/` - rejected engineering approaches retained with warnings.
@@ -160,9 +163,10 @@ through CAF 4.9.206/4.9.227 into KudProject's Linux 4.9.337 commit
 `cad7430de0364a908d73cea93d06f9ca44ad439e`; the qualified final source commit
 is `ca9f99dcda9bc0cf55271157d3a5718ed8cf6e3b`. r8-c3 ends at
 `45a98eac292f8b1fbf6f8e5b1130805691327e68`; r8-c8 ends at
-`40a80480379791338dfacb3d8a2b3d755c655bad`. The published patch series
-reconstructs it from the archived r7/c3 source without depending on a moving
-donor branch.
+`40a80480379791338dfacb3d8a2b3d755c655bad`; final r8-c9 ends at
+`0ea8dc3e34140ac48640f23dacf8b9a04fd2b26e`. The published patch series
+reconstructs it from the archived r7/c3/c8 states without depending on a
+moving donor branch.
 
 Related upstream work:
 

@@ -32,3 +32,9 @@ five c4/c5 baseline samples, five A53 samples and two five-run ThinLTO sets.
 `targeted-summary.csv` combines all ten ThinLTO samples and keeps the volatile
 eMMC tail regression visible. See `docs/R8_ENGINEERING.md` for the acceptance
 decision and evidence limits.
+
+`r8-c9/` contains the final CPU/GPU runtime identity, permanent boot readback
+and five-run GPU summary. The complete v1.4.0 evidence archive adds branch-clock
+telemetry, regulator votes, mixed CPU/GPU stress and the 25-module ABI audit.
+See `docs/GPU_OVERCLOCK.md` for rejected candidates and the device-specific
+clock limit.

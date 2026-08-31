@@ -1,8 +1,10 @@
 # r5 validation record (historical)
 
-This file preserves the original r5 qualification. Current r8-c8 validation,
-hashes and evidence limits are in [R8_ENGINEERING.md](R8_ENGINEERING.md) and
-the [r8-c8 evidence index](../benchmarks/results/r8-c8/README.md).
+This file preserves the original r5 qualification. Current final r8-c9
+validation, hashes and evidence limits are in
+[R8_ENGINEERING.md](R8_ENGINEERING.md),
+[GPU_OVERCLOCK.md](GPU_OVERCLOCK.md) and the
+[r8-c9 evidence index](../benchmarks/results/r8-c9/README.md).
 
 ## Artifact identity
 

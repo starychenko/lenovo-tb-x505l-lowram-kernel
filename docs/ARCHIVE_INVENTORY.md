@@ -9,11 +9,12 @@ toolchain later disappears.
 - exact baseline and r5-r8 kernel configurations, including rejected or
   superseded candidate configs;
 - the complete five-file r5 source patch, the independent r7 camera PM QoS
-  lifecycle patch and the ordered 17-patch r8 c4-c8 series;
+  lifecycle patch, the ordered 17-patch r8 c4-c8 series and the final c9
+  CPU/GPU patch;
 - build, repack, temporary-boot, validation and recovery scripts;
 - PHH device-hook patch, reversible LineageOS tuning and the measured crDroid
   13 EAS/schedutil profile;
-- native AArch64 benchmark source, Android test wrappers, module-CRC and
+- native AArch64 plus EGL/GLES GPU benchmark source, Android test wrappers, module-CRC and
   memory-pressure tools, plus privacy-reviewed generated r6/r7/r8 summaries;
 - module ABI-analysis tools used during development;
 - source provenance, the staged 4.9.205 -> 4.9.206 -> 4.9.227 -> 4.9.337
@@ -24,7 +25,7 @@ toolchain later disappears.
 
 ## Stored as GitHub Release assets
 
-- final flashable r7 image and the qualified r8-c8 pre-release boot image;
+- final flashable r7 fallback, qualified r8-c8 pre-release and final r8-c9 stable boot image;
 - matching raw `Image`, config, `System.map`, `Module.symvers` and generated
   `compile.h`;
 - complete corresponding source at r7 commit
@@ -40,6 +41,11 @@ toolchain later disappears.
 v1.4.0-rc1 additionally stores the complete c8 source archive, ordered patch
 series and privacy-reviewed c8 validation evidence. All 10 files listed by its
 manifest were downloaded again after upload and re-hashed successfully.
+
+Final v1.4.0 stores the complete c9 source archive, exact patched concatenated
+DTB, c4-c9 patch archive, raw build outputs and privacy-reviewed GPU/ABI/stress
+evidence. Its release manifest is verified both before upload and after a fresh
+download.
 
 Generated `.o` files are not archived individually. They add several gigabytes,
 contain absolute local build paths, and can be regenerated from the preserved

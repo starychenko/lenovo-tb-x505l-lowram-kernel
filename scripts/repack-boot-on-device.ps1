@@ -11,6 +11,8 @@ param(
     [Parameter(Mandatory = $true)]
     [string] $KernelImage,
 
+    [string] $KernelDtb,
+
     [Parameter(Mandatory = $true)]
     [string] $OutputBootImage,
 
@@ -21,6 +23,7 @@ $adb = (Resolve-Path -LiteralPath $AdbPath).Path
 $magiskBoot = (Resolve-Path -LiteralPath $MagiskBootPath).Path
 $stockBoot = (Resolve-Path -LiteralPath $StockBootImage).Path
 $kernel = (Resolve-Path -LiteralPath $KernelImage).Path
+$kernelDtb = if ($KernelDtb) { (Resolve-Path -LiteralPath $KernelDtb).Path } else { $null }
 $output = [IO.Path]::GetFullPath($OutputBootImage)
 $remote = '/data/local/tmp/tb-x505l-kernel-repack'
 $createdRemote = $false
@@ -64,6 +67,19 @@ try {
     & $adb shell "test -f $remote/kernel_dtb"
     if ($LASTEXITCODE -ne 0) {
         throw 'Expected appended stock DTB was not extracted; refusing to repack.'
+    }
+
+    if ($kernelDtb) {
+        & $adb push $kernelDtb "$remote/kernel_dtb"
+        if ($LASTEXITCODE -ne 0) {
+            throw 'Could not replace the extracted kernel DTB.'
+        }
+        $expectedDtbHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $kernelDtb).Hash.ToLowerInvariant()
+        $remoteDtbHash = ((& $adb shell "sha256sum $remote/kernel_dtb").Trim() -split '\s+')[0]
+        if ($remoteDtbHash -ne $expectedDtbHash) {
+            throw "Kernel DTB transfer verification failed: expected=$expectedDtbHash actual=$remoteDtbHash"
+        }
+        Write-Output "Replacement kernel_dtb SHA-256: $expectedDtbHash"
     }
 
     & $adb shell "cp $remote/Image $remote/kernel"

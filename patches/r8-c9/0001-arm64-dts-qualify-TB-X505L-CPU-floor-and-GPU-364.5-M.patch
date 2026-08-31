@@ -1,0 +1,71 @@
+From 0ea8dc3e34140ac48640f23dacf8b9a04fd2b26e Mon Sep 17 00:00:00 2001
+From: Yevhenii Starychenko <Evgeniistarychenko@gmail.com>
+Date: Mon, 31 Aug 2026 23:40:23 +0000
+Subject: [PATCH] arm64: dts: qualify TB-X505L CPU floor and GPU 364.5 MHz
+
+---
+ arch/arm64/boot/dts/qcom/sdm429.dtsi      |  1 -
+ arch/arm64/boot/dts/qcom/sdm439-p407.dtsi | 15 ++++++++++++---
+ drivers/clk/msm/clock-gcc-8952.c          |  2 ++
+ 3 files changed, 14 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sdm429.dtsi b/arch/arm64/boot/dts/qcom/sdm429.dtsi
+index b261860f7a80..cc84be026d2e 100644
+--- a/arch/arm64/boot/dts/qcom/sdm429.dtsi
++++ b/arch/arm64/boot/dts/qcom/sdm429.dtsi
+@@ -55,7 +55,6 @@
+ 		qcom,governor-per-policy;
+ 
+ 		qcom,cpufreq-table =
+-			 <  960000 >,
+ 			 < 1305600 >,
+ 			 < 1497600 >,
+ 			 < 1708800 >,
+diff --git a/arch/arm64/boot/dts/qcom/sdm439-p407.dtsi b/arch/arm64/boot/dts/qcom/sdm439-p407.dtsi
+index 5e7946d8cc14..c6779d5231f4 100755
+--- a/arch/arm64/boot/dts/qcom/sdm439-p407.dtsi
++++ b/arch/arm64/boot/dts/qcom/sdm439-p407.dtsi
+@@ -663,9 +663,18 @@
+ 
+ 			qcom,initial-pwrlevel = <0>;
+ 
+-			/* SVS */
++			/* Experimental LOW level for TB-X505L speed-bin 10. */
+ 			qcom,gpu-pwrlevel@0 {
+ 				reg = <0>;
++				qcom,gpu-freq = <364500000>;
++				qcom,bus-freq = <5>;
++				qcom,bus-min = <4>;
++				qcom,bus-max = <7>;
++			};
++
++			/* SVS */
++			qcom,gpu-pwrlevel@1 {
++				reg = <1>;
+ 				qcom,gpu-freq = <320000000>;
+ 				qcom,bus-freq = <4>;
+ 				qcom,bus-min = <4>;
+@@ -673,8 +682,8 @@
+ 			};
+ 
+ 			/* XO */
+-			qcom,gpu-pwrlevel@1 {
+-				reg = <1>;
++			qcom,gpu-pwrlevel@2 {
++				reg = <2>;
+ 				qcom,gpu-freq = <19200000>;
+ 				qcom,bus-freq = <0>;
+ 				qcom,bus-min = <0>;
+diff --git a/drivers/clk/msm/clock-gcc-8952.c b/drivers/clk/msm/clock-gcc-8952.c
+index 44e407e1d5c3..eb48e7935d8c 100644
+--- a/drivers/clk/msm/clock-gcc-8952.c
++++ b/drivers/clk/msm/clock-gcc-8952.c
+@@ -782,6 +782,8 @@ static struct clk_freq_tbl ftbl_gcc_oxili_gfx3d_clk_sdm439[] = {
+ 	F_SLEW( 266670000, FIXED_CLK_SRC, gpll0,	3,	0,	0),
+ 	F_SLEW( 320000000, FIXED_CLK_SRC, gpll0,	2.5,	0,	0),
+ 	F_SLEW( 355200000, 710400000,	  gpll3,	1,	0,	0),
++	/* Stay just below the speed-bin 10 GPLL3 integer-fuse boundary. */
++	F_SLEW( 364500000, 729000000,	  gpll3,	1,	0,	0),
+ 	F_SLEW( 375000000, 750000000,	  gpll3,	1,	0,	0),
+ 	F_SLEW( 400000000, FIXED_CLK_SRC, gpll0,	2,	0,	0),
+ 	F_SLEW( 450000000, 900000000,	  gpll3,	1,	0,	0),

@@ -1,17 +1,17 @@
-# r8 engineering: feature pack and fast-path candidate
+# r8 engineering: feature pack through final c9
 
 ## Current status
 
-`r8-c8-thinlto` is the current qualified r8 candidate for the tested Lenovo
-TB-X505L 2/32 GB. It keeps the c2/c3 feature pack and adds 17 reviewable
-scheduler, KGSL, ARM64, memory, BFQ, power and compiler commits. c8 completed
-temporary boot, repeated targeted tests, memory pressure, production-profile
-and hardware qualification, was then flashed permanently, and its
-boot-partition readback matched the tested image byte for byte.
+`r8-c9-oc3645-cpu1305` is the final v1.4.0 kernel for the tested Lenovo
+TB-X505L 2/32 GB. It keeps the complete c2-c8 feature pack, raises the CPU
+floor to 1.3056 GHz and adds a qualified 364.5 MHz GPU level above the stock
+320 MHz level. The final image completed temporary boot, targeted GPU and
+mixed CPU/GPU stress, vendor-module ABI validation, permanent flash and an
+exact boot-partition readback.
 
-It remains a pre-release because the project has only one physical test unit
-and no long-duration unplugged battery or multi-device sample. The stable
-fallback remains r7/v1.2.0.
+The scope is still one physical tablet and one vendor/runtime combination.
+That limitation is documented instead of treating the result as universal;
+the c8 image and r7/v1.2.0 remain available rollback points.
 
 Source identity:
 
@@ -20,8 +20,10 @@ r7 base       ca9f99dcda9bc0cf55271157d3a5718ed8cf6e3b
 r8-c2 head    476936bf688557fb6edbe87ef7f0c4acc91592c6
 r8-c3 head    45a98eac292f8b1fbf6f8e5b1130805691327e68
 r8-c8 head    40a80480379791338dfacb3d8a2b3d755c655bad
+r8-c9 head    0ea8dc3e34140ac48640f23dacf8b9a04fd2b26e
 c2 patch      b543bd902b5a72308f3300dc762827fad40710c2ab04f32558f36d6f0fa4bb4a
 c3 patch      93d3de2d1dd607b18d03259235c9ca67f4d21f1f8d9e63a4cb34bd9726be15ef
+c9 patch      a460e2db9ec83def84705bf486f2edc98b23fbf75771a65da526912665c2a2dc
 ```
 
 The c2 patch reconstructs the feature pack from the exact r7 base. The c3
@@ -29,6 +31,23 @@ patch then applies four files, 32 insertions and three deletions on top of c2.
 Both deltas were checked in the forward and reverse directions.
 The c4-c8 mail series was applied to the c3 tree in a temporary Git index; its
 resulting tree ID exactly matched c8 without creating a second full worktree.
+Applying the c9 patch to c8 reconstructs tree
+`88f8929f885b45ec856f746a0a3f350efc1d40de` exactly.
+
+## What c9 adds
+
+- CPU levels exposed at runtime: 1.3056, 1.4976, 1.7088, 1.9584 and 2.016 GHz.
+- GPU levels exposed at runtime: 320 and 364.5 MHz. The higher level uses the
+  existing GPLL3 path, the next validated voltage corner and matching bus
+  votes; measured clocks were approximately 364.5 MHz.
+- Five repeated GPU runs averaged 14.463 FPS versus 12.702 FPS at 320 MHz,
+  a 13.86% gain in that workload. A 600-frame run and mixed four-thread
+  CPU/GPU stress completed at approximately 14.46-14.50 FPS with a 54 C peak.
+- The permanent boot image and its boot-partition readback both hash to
+  `773611c66e7458529446c05aa974c25d4c4cef8a7d49329af40bd3ea1f75b4ce`.
+
+The clock-source experiments, voltage-corner reasoning and rejected 400/432
+MHz paths are recorded in [GPU_OVERCLOCK.md](GPU_OVERCLOCK.md).
 
 ## What c2 introduced
 
@@ -162,11 +181,11 @@ schedutil up/down rate limit us      0 / 20000
 kernel.sched_schedstats              0
 ```
 
-## GPU speed-bin result
+## c2/c3 GPU speed-bin baseline
 
-No GPU overclock is included. The live device tree contains higher Adreno 504
-levels for other silicon bins, but the tested tablet's QFPROM values decode to
-speed bin 10:
+The early c2/c3 candidates deliberately included no GPU overclock. The live
+device tree contains higher Adreno 504 levels for other silicon bins, while
+the tested tablet's QFPROM values decode to speed bin 10:
 
 ```text
 QFPROM 0x6004 = 0x98800003
@@ -175,9 +194,10 @@ speed bin      = 10
 validated GPU  = 320 MHz
 ```
 
-The 400, 510, 560 and 650 MHz tables belong to other bins. A 400 MHz build
-would be an explicit overclock experiment requiring thermal and long-duration
-3D validation, not a safe default.
+At that stage the 400, 510, 560 and 650 MHz tables were treated only as donor
+evidence, not as safe defaults for this unit. c9 later performed the missing
+clock-source, voltage-corner, bus-vote and stress validation and qualified the
+lower 364.5 MHz GPLL3 step; see [GPU_OVERCLOCK.md](GPU_OVERCLOCK.md).
 
 ## c3 build identity
 
@@ -311,7 +331,9 @@ memory-pressure behavior and optional features are different dimensions.
 
 ## Evaluated but not shipped
 
-- GPU overclocking was rejected for the live speed bin.
+- The apparent 400 MHz GPLL0 path, real approximately 361.6 MHz GPLL3 path
+  and 432/540 MHz experiments were rejected. Only the measured and stressed
+  364.5 MHz GPLL3 level ships.
 - Compile-time removal of scheduler statistics was rejected because of broad
   vendor-module CRC drift; the reversible runtime switch gives the useful
   part without changing the ABI.
@@ -328,9 +350,10 @@ memory-pressure behavior and optional features are different dimensions.
 
 The next useful work is ordered by expected value, not by patch count:
 
-1. **c9 soak and power evidence.** Several days of normal child-use, suspend/
-   resume, Wi-Fi/video and unplugged battery measurements. This is deliberately
-   the final wave before promoting c8-derived work to stable.
+1. **v1.4.x soak and power evidence.** Continue normal child-use, suspend/
+   resume, Wi-Fi/video and unplugged battery measurements after the final
+   release; any issue is handled as a narrow follow-up instead of silently
+   changing v1.4.0.
 2. **Storage-latency investigation.** Reproduce the volatile random-write tail
    with more controlled cache/thermal state, then evaluate one compatible eMMC
    or block-layer change at a time. No change should ship merely to improve one

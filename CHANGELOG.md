@@ -1,5 +1,29 @@
 # Changelog
 
+## r8-c9 / v1.4.0 - 2026-09-01
+
+- Promoted the r8 line to the final stable v1.4.0 release after permanent
+  qualification on the tested TB-X505L 2/32 GB unit.
+- Raised the lowest exposed CPU level from 960 to 1305.6 MHz while retaining
+  the qualified 2016 MHz maximum.
+- Added an exact 364.5 MHz GPLL3 GPU level above the retained 320 MHz level for
+  the live speed-bin 10 device; measured the branch clock at
+  approximately 364.498-364.503 MHz under load.
+- Added a project-authored off-screen EGL/GLES fragment benchmark and published
+  five short runs, a 600-frame run, mixed four-thread CPU/GPU stress, thermal
+  telemetry, regulator votes and the rejected 400/432 MHz paths.
+- Measured a 14.463 FPS five-run mean versus the 12.702 FPS 320 MHz baseline
+  (+13.86%) in that narrow workload; mixed stress peaked at 54 C without a GPU
+  fault, reset, stuck clock, watchdog, Oops, BUG or Call trace.
+- Re-ran the complete 25-module ABI audit: 2107 requirements, zero CRC drift,
+  zero candidate regressions and zero unresolved symbols.
+- Verified the repacked Image and DTB hashes after unpacking, then permanently
+  flashed the exact tested image and matched the live boot-partition SHA-256
+  `773611c66e7458529446c05aa974c25d4c4cef8a7d49329af40bd3ea1f75b4ce`.
+- Preserved the exact c9 source commit, incremental patch, config, raw build
+  outputs, patched DTB, source archive, validation evidence and rejected
+  candidate identities with explicit warnings.
+
 ## r8-c8 / v1.4.0-rc1 - 2026-09-01
 
 - Added 17 independently reviewable c4-c8 commits for scheduler/KGSL latency,
