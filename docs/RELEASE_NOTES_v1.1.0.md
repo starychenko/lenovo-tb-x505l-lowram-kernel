@@ -37,6 +37,24 @@ The final boot image preserves the verified Lenovo DTB hash
 header v1, command line, Android 10 OS metadata and zero-length Android
 ramdisk.
 
+## Reproducible inputs
+
+The complete patched r6 source and exact config are attached to this release.
+r6 deliberately reuses the already archived v1.0.0 toolchains:
+
+```text
+aarch64-linux-android-4.9-toolchain.tar.xz
+b45eb5011dfeebd2b4ad45e8bc29ea46f91423ec47ecb86247f57200c2e99a1d
+
+android-clang-r365631c-linux-x86_64.tar.xz
+7d883cc7f1130475c4b5cc835dcd2b863d8112d095f36e1471bd2f222140a349
+```
+
+They remain available from the
+[v1.0.0 release](https://github.com/starychenko/lenovo-tb-x505l-lowram-kernel/releases/tag/v1.0.0)
+instead of being duplicated. The public reproducibility-key archive is attached
+again to v1.1.0; it is a project build key, not a Lenovo key or user credential.
+
 ## What was measured
 
 - 300 Hz was rejected after worse cross-core latency tails, Settings p95/p99
