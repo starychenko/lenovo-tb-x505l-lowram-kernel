@@ -1,0 +1,59 @@
+From 1d03102c443af1082084338e42559e605cb8dd25 Mon Sep 17 00:00:00 2001
+From: Sultan Alsawaf <sultan@kerneltoast.com>
+Date: Sun, 24 Jan 2021 18:02:14 -0800
+Subject: [PATCH 02/17] msm: kgsl: Reduce latency while processing ioctls
+
+The GPU's ioctls sleep a lot due to memory allocation, during which time
+the CPU can enter a deep idle state and take a while to finish executing
+the ioctl afterwards. We can alleviate this by optimistically assuming
+that the task running the ioctl won't migrate CPUs while it runs and
+restricting the current CPU to shallow idle states.
+
+Signed-off-by: Sultan Alsawaf <sultan@kerneltoast.com>
+Signed-off-by: Ratoriku <a1063021545@gmail.com>
+Signed-off-by: Fiqri Ardyansyah <fiqri15072019@gmail.com>
+Signed-off-by: Jprimero15 <jprimero155@gmail.com>
+(cherry picked from commit aa4e2ce980c8da8b33513f05dee523cfeb1bd987)
+---
+ drivers/gpu/msm/kgsl_ioctl.c | 24 +++++++++++++++++++++++-
+ 1 file changed, 23 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/msm/kgsl_ioctl.c b/drivers/gpu/msm/kgsl_ioctl.c
+index 735ca3cc23b..9108293bcbb 100644
+--- a/drivers/gpu/msm/kgsl_ioctl.c
++++ b/drivers/gpu/msm/kgsl_ioctl.c
+@@ -164,7 +164,8 @@ long kgsl_ioctl_helper(struct file *filep, unsigned int cmd, unsigned long arg,
+ 	return ret;
+ }
+ 
+-long kgsl_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
++static long __kgsl_ioctl(struct file *filep, unsigned int cmd,
++			 unsigned long arg)
+ {
+ 	struct kgsl_device_private *dev_priv = filep->private_data;
+ 	struct kgsl_device *device = dev_priv->device;
+@@ -187,3 +188,24 @@ long kgsl_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
+ 
+ 	return ret;
+ }
++
++long kgsl_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
++{
++	/*
++	 * Optimistically assume the current task won't migrate to another CPU
++	 * and restrict the current CPU to shallow idle states so that it won't
++	 * take too long to finish running the ioctl whenever the ioctl runs a
++	 * command that sleeps, such as for memory allocation.
++	 */
++	struct pm_qos_request req = {
++		.type = PM_QOS_REQ_AFFINE_CORES,
++		.cpus_affine = ATOMIC_INIT(BIT(raw_smp_processor_id()))
++	};
++	long ret;
++
++	pm_qos_add_request(&req, PM_QOS_CPU_DMA_LATENCY, 100);
++	ret = __kgsl_ioctl(filep, cmd, arg);
++	pm_qos_remove_request(&req);
++
++	return ret;
++}

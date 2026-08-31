@@ -58,3 +58,12 @@ It was checked forward against c2 and in reverse against c3. SHA-256:
 ```text
 93d3de2d1dd607b18d03259235c9ca67f4d21f1f8d9e63a4cb34bd9726be15ef
 ```
+
+## r8 c4-c8 patch series
+
+`r8-c4-c8/` contains 17 ordered mail patches from c3 commit `45a98eac292f`
+to c8 commit `40a804803797`. The series preserves the individual review and
+rollback boundaries instead of publishing another opaque full-tree diff.
+Applying it in a temporary Git index produced the exact c8 tree
+`bff54dc04e870882f0cac4c5b953d73553c30681`. See the directory README and
+`SHA256SUMS` for the complete manifest.

@@ -1,0 +1,27 @@
+From 6e11d4dc5add33524554fd56cef8690acb6437d1 Mon Sep 17 00:00:00 2001
+From: Francisco Franco <franciscofranco.1990@gmail.com>
+Date: Thu, 21 Jun 2018 12:29:29 +0000
+Subject: [PATCH 04/17] msm: kgsl: run kgsl-workqueue as a high prio wq
+
+Signed-off-by: Francisco Franco <franciscofranco.1990@gmail.com>
+Signed-off-by: Atman Shah <masteratman@gmail.com>
+Signed-off-by: Dusan Uveric <dusan.uveric9@gmail.com>
+Signed-off-by: Jprimero15 <jprimero155@gmail.com>
+(cherry picked from commit 8dc1c978ca165d535acb97d98cb8f794797967e0)
+---
+ drivers/gpu/msm/kgsl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/msm/kgsl.c b/drivers/gpu/msm/kgsl.c
+index a87b46537d9..5c397d5f5a7 100644
+--- a/drivers/gpu/msm/kgsl.c
++++ b/drivers/gpu/msm/kgsl.c
+@@ -5009,7 +5009,7 @@ static int __init kgsl_core_init(void)
+ 	INIT_LIST_HEAD(&kgsl_driver.pagetable_list);
+ 
+ 	kgsl_driver.workqueue = alloc_workqueue("kgsl-workqueue",
+-		WQ_UNBOUND | WQ_MEM_RECLAIM | WQ_SYSFS, 0);
++		WQ_HIGHPRI | WQ_UNBOUND | WQ_MEM_RECLAIM | WQ_SYSFS, 0);
+ 
+ 	kgsl_driver.mem_workqueue = alloc_workqueue("kgsl-mementry",
+ 		WQ_UNBOUND | WQ_MEM_RECLAIM, 0);

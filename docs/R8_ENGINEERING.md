@@ -2,11 +2,12 @@
 
 ## Current status
 
-`r8-fastpath-c3` is the current qualified r8 candidate for the tested Lenovo
-TB-X505L 2/32 GB. It extends the r8-c2 feature pack with four small scheduler,
-memory-management and I2C changes. c3 completed temporary boot, stress,
-production-profile and hardware qualification, was then flashed permanently,
-and its boot-partition readback matched the tested image byte for byte.
+`r8-c8-thinlto` is the current qualified r8 candidate for the tested Lenovo
+TB-X505L 2/32 GB. It keeps the c2/c3 feature pack and adds 17 reviewable
+scheduler, KGSL, ARM64, memory, BFQ, power and compiler commits. c8 completed
+temporary boot, repeated targeted tests, memory pressure, production-profile
+and hardware qualification, was then flashed permanently, and its
+boot-partition readback matched the tested image byte for byte.
 
 It remains a pre-release because the project has only one physical test unit
 and no long-duration unplugged battery or multi-device sample. The stable
@@ -18,6 +19,7 @@ Source identity:
 r7 base       ca9f99dcda9bc0cf55271157d3a5718ed8cf6e3b
 r8-c2 head    476936bf688557fb6edbe87ef7f0c4acc91592c6
 r8-c3 head    45a98eac292f8b1fbf6f8e5b1130805691327e68
+r8-c8 head    40a80480379791338dfacb3d8a2b3d755c655bad
 c2 patch      b543bd902b5a72308f3300dc762827fad40710c2ab04f32558f36d6f0fa4bb4a
 c3 patch      93d3de2d1dd607b18d03259235c9ca67f4d21f1f8d9e63a4cb34bd9726be15ef
 ```
@@ -25,6 +27,8 @@ c3 patch      93d3de2d1dd607b18d03259235c9ca67f4d21f1f8d9e63a4cb34bd9726be15ef
 The c2 patch reconstructs the feature pack from the exact r7 base. The c3
 patch then applies four files, 32 insertions and three deletions on top of c2.
 Both deltas were checked in the forward and reverse directions.
+The c4-c8 mail series was applied to the c3 tree in a temporary Git index; its
+resulting tree ID exactly matched c8 without creating a second full worktree.
 
 ## What c2 introduced
 
@@ -87,6 +91,46 @@ operation, not that sub-millisecond number with an external latency rig.
 
 The four changes are kernel-native and active from kernel boot. They are not
 Android init scripts.
+
+## What c4-c8 add
+
+### Scheduler and KGSL submission
+
+The scheduler avoids pulling utilization from a CPU with no useful migratable
+task. KGSL now protects the critical ioctl path from deep CPU idle while it
+waits, removes unused ringbuffer timing, raises the critical workqueue priority
+and moves selected workers to the modern kthread-worker API.
+
+### ARM64 and memory hot paths
+
+The candidate imports optimized arm64 `memcmp` and `strlen` implementations
+and the large-region `mremap` fast path. These are targeted code paths, not a
+claim that every application receives the donor commit headline.
+
+### BFQ without changing the default
+
+BFQ v8r10 is built in and can be selected at runtime. The live scheduler list
+is `noop [deadline] cfq bfq`; `deadline` stays selected because the short BFQ
+functional test proves compatibility, not a universal gain on this eMMC.
+
+### SDM429 power vote
+
+The stock device tree requests a 360 us KGSL active latency, which prevented
+the generic relaxed value from taking effect. The SDM429-specific override is
+1000 us active/CPU-mask and 100 us wake latency. The critical ioctl guard still
+uses the low-latency path. The live active node reads back `1000`.
+
+### A53 ThinLTO build
+
+The final c8 build enables optimized inlining, tunes generated arm64 code for
+Cortex-A53 with the live AES/SHA/CRC feature set, and uses ThinLTO. It keeps
+Android Clang 9.0.8 r365631c; only the LTO link uses system GNU gold 1.16
+instead of the older bundled gold 1.12. The compressed kernel grows by about
+1.2 MiB, so c8 accepts a measured latency/size trade-off rather than claiming
+that LTO is free.
+
+All 25 shipping modules were audited across 2,004 requirement rows and 980
+unique symbols: zero missing symbols and zero CRC drift.
 
 ## Android runtime policy
 
@@ -181,6 +225,48 @@ Two simultaneous 256 MiB memory workers completed 16 rounds each without an
 OOM kill, panic or hung task. Curated evidence is in
 `benchmarks/results/r8-c3/`.
 
+## c8 build and qualification
+
+```text
+Linux localhost 4.9.337-tbx505l-r8-c8-thinlto+ #22 SMP PREEMPT
+Tue Sep 1 00:52:00 UTC 2026 aarch64
+```
+
+```text
+boot.img       b0186ee9d2968051af7224802f8c040332f7672324779f3c91c7f31534d555bf
+Image          59afeab3bb758763af773b4b126158a563de89238ab1d83e4ce36757071d888c
+config         06571aa81ec85ee3a781d7439816859b36338ade28f00c3608acb06c893deb2f
+System.map     ffe8595e6f833d872d5b90ff8252789d39647456e8d3fb79925a3326bd68338d
+Module.symvers c5c30705a62e06a5ca65c9404eac1decab8b5991186ce935fd32e5c60f13e7d9
+```
+
+Temporary boot and the final permanent boot both loaded all 25 vendor modules.
+Audio, Wi-Fi with real traffic, two cameras, the accelerometer, Bluetooth,
+compat vDSO, Binder caches, KCAL, BFQ availability, deadline default and the
+KGSL vote passed. The nine Android profile values were present after a normal
+boot, and the critical kernel-log scan was clean. The live boot-partition hash
+matched `boot.img` exactly.
+
+Two simultaneous 256 MiB workers completed 16 rounds each with no OOM, panic
+or hung task. Curated evidence is in `benchmarks/results/r8-c8/`.
+
+The most relevant five-versus-ten-run medians compare the c4/c5 baseline with
+the final ThinLTO candidate:
+
+| Metric | c8 change |
+|---|---:|
+| same-core idle p50 / p95 / p99 | -5.63% / -7.72% / -8.61% latency |
+| same-core loaded p50 / p95 / p99 | -5.45% / -5.70% / -7.11% latency |
+| cross-core loaded p50 / p95 / p99 | -4.91% / -5.79% / -19.70% latency |
+| random-read IOPS / p95 | +4.90% / -9.55% latency |
+| sequential read / write | +0.77% / +5.52% |
+| random-write p99 | +117.89% latency regression |
+
+The repeated wake-latency direction is strong enough to retain ThinLTO. The
+eMMC tails are not: c8 contains no default scheduler switch, and the volatile
+random-write regression remains explicit evidence rather than being attributed
+to a specific patch.
+
 ## c2 to c3 measurements
 
 The native harness used two repetitions per candidate. That is enough to catch
@@ -234,16 +320,17 @@ memory-pressure behavior and optional features are different dimensions.
 - Scheduler donor changes with mixed measurements, wrong prerequisites or
   misleading commit labels were excluded instead of being accumulated for a
   larger feature count.
-- ThinLTO, a wholesale scheduler replacement and major CPU/GPU frequency-table
-  changes remain isolated high-risk experiments, not c3 defaults.
+- A wholesale scheduler replacement and major CPU/GPU frequency-table changes
+  remain excluded. ThinLTO moved from experiment to c8 only after the ordered
+  repeat and full module/runtime qualification.
 
 ## Development roadmap
 
 The next useful work is ordered by expected value, not by patch count:
 
-1. **Soak and power evidence.** Several days of normal child-use, suspend/
-   resume, Wi-Fi/video and unplugged battery measurements. This decides whether
-   c3 can become stable v1.3.0.
+1. **c9 soak and power evidence.** Several days of normal child-use, suspend/
+   resume, Wi-Fi/video and unplugged battery measurements. This is deliberately
+   the final wave before promoting c8-derived work to stable.
 2. **Storage-latency investigation.** Reproduce the volatile random-write tail
    with more controlled cache/thermal state, then evaluate one compatible eMMC
    or block-layer change at a time. No change should ship merely to improve one
@@ -262,6 +349,9 @@ The next useful work is ordered by expected value, not by patch count:
 
 This keeps development moving in larger, coherent waves while preserving an
 independently testable rollback point after each one.
+
+The detailed Ukrainian backlog, including c4-c8 candidate groups and rejected
+ideas, is maintained in [KERNEL_ROADMAP.uk.md](KERNEL_ROADMAP.uk.md).
 
 ## Evidence limits
 

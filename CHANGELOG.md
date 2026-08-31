@@ -1,5 +1,24 @@
 # Changelog
 
+## r8-c8 / v1.4.0-rc1 - 2026-09-01
+
+- Added 17 independently reviewable c4-c8 commits for scheduler/KGSL latency,
+  optimized ARM64 hot paths, `mremap`, BFQ v8r10, SDM429 GPU power votes and
+  A53-targeted ThinLTO.
+- Kept BFQ selectable and retained `deadline` as the qualified eMMC default.
+- Kept the live GPU speed-bin limit at 320 MHz; no overclock or unsafe fsync
+  policy was added.
+- Built with the existing Android Clang 9.0.8 and GNU gold 1.16 for ThinLTO.
+- Audited all 25 vendor modules: 2,004 requirement rows, 980 unique symbols,
+  zero missing symbols and zero CRC drift.
+- Repeated targeted latency/I/O tests before and after the baseline. Typical
+  kernel wake latency improved; volatile eMMC tail regressions remain public.
+- Passed temporary boot, active/production validators and a concurrent 512 MiB
+  memory-pressure run, then permanently flashed and matched the boot readback.
+- Published the exact config, ordered patch series, build hashes, curated
+  evidence and release notes without duplicating the full source worktree in
+  Git history.
+
 ## r8-c3 / v1.3.0-rc2 - 2026-08-31
 
 - Added four independently reviewable fast-path changes: conditional sync-wake

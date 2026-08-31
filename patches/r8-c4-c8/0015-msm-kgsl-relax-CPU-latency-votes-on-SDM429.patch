@@ -1,0 +1,34 @@
+From 411d2b96ba2e515f59d58f61d055dd44684f121d Mon Sep 17 00:00:00 2001
+From: Yevhenii Starychenko <Evgeniistarychenko@gmail.com>
+Date: Mon, 31 Aug 2026 20:24:53 +0000
+Subject: [PATCH 15/17] msm: kgsl: relax CPU latency votes on SDM429
+
+The stock TB-X505L DT supplies 360 us for all KGSL latency votes, so the generic relaxed defaults never take effect. Allow deeper sub-1 ms CPU idle states while the GPU is active, retain a 100 us wake vote, and keep the existing ioctl low-latency guard.
+---
+ drivers/gpu/msm/adreno.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/drivers/gpu/msm/adreno.c b/drivers/gpu/msm/adreno.c
+index b07a777df6b..35c3bf004e1 100644
+--- a/drivers/gpu/msm/adreno.c
++++ b/drivers/gpu/msm/adreno.c
+@@ -1184,6 +1184,19 @@ static int adreno_of_get_power(struct adreno_device *adreno_dev,
+ 		&device->pwrctrl.pm_qos_wakeup_latency))
+ 		device->pwrctrl.pm_qos_wakeup_latency = 101;
+ 
++	/*
++	 * The SDM429 device tree keeps all three latency votes at 360 us.
++	 * Permit deeper CPU idle states while the GPU is active, but keep a
++	 * tight vote while the GPU is waking. The ioctl path temporarily uses
++	 * its own low-latency vote, so interactive command submission remains
++	 * protected.
++	 */
++	if (of_machine_is_compatible("qcom,sdm429")) {
++		device->pwrctrl.pm_qos_active_latency = 1000;
++		device->pwrctrl.pm_qos_cpu_mask_latency = 1000;
++		device->pwrctrl.pm_qos_wakeup_latency = 100;
++	}
++
+ 	if (of_property_read_u32(node, "qcom,idle-timeout", &timeout))
+ 		timeout = 80;
+ 

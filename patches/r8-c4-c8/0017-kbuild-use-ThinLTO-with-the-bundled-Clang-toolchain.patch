@@ -1,0 +1,63 @@
+From 40a80480379791338dfacb3d8a2b3d755c655bad Mon Sep 17 00:00:00 2001
+From: Yevhenii Starychenko <Evgeniistarychenko@gmail.com>
+Date: Mon, 31 Aug 2026 20:45:27 +0000
+Subject: [PATCH 17/17] kbuild: use ThinLTO with the bundled Clang toolchain
+
+Switch the existing experimental clang LTO path to ThinLTO and resolve LLVMgold through clang instead of relying on the build directory. This remains gated by CONFIG_LTO_CLANG and is evaluated on a dedicated candidate branch.
+---
+ Makefile     |  4 ++--
+ arch/Kconfig | 12 ++++++------
+ 2 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 8c9f1849ead..c951ac9e956 100755
+--- a/Makefile
++++ b/Makefile
+@@ -653,7 +653,7 @@ ifdef CONFIG_LTO_CLANG
+ # use GNU gold with LLVMgold for LTO linking, and LD for vmlinux_link
+ LDFINAL_vmlinux := $(LD)
+ LD		:= $(LDGOLD)
+-LDFLAGS		+= -plugin LLVMgold.so
++LDFLAGS		+= -plugin $(shell $(CC) -print-file-name=LLVMgold.so)
+ # use llvm-ar for building symbol tables from IR files, and llvm-dis instead
+ # of objdump for processing symbol versions and exports
+ LLVM_AR		:= llvm-ar
+@@ -682,7 +682,7 @@ KBUILD_CFLAGS	+= $(call cc-option,-fdata-sections,)
+ endif
+ 
+ ifdef CONFIG_LTO_CLANG
+-lto-clang-flags	:= -flto -fvisibility=hidden
++lto-clang-flags	:= -flto=thin -fvisibility=hidden
+ 
+ # allow disabling only clang LTO where needed
+ DISABLE_LTO_CLANG := -fno-lto -fvisibility=default
+diff --git a/arch/Kconfig b/arch/Kconfig
+index edff29fc3c0..6a743b40a7b 100644
+--- a/arch/Kconfig
++++ b/arch/Kconfig
+@@ -527,7 +527,7 @@ config LTO_NONE
+ 	bool "None"
+ 
+ config LTO_CLANG
+-	bool "Use clang Link Time Optimization (LTO) (EXPERIMENTAL)"
++	bool "Use clang Thin Link Time Optimization (ThinLTO) (EXPERIMENTAL)"
+ 	depends on ARCH_SUPPORTS_LTO_CLANG
+ 	depends on !FTRACE_MCOUNT_RECORD || HAVE_C_RECORDMCOUNT
+ 	depends on !KASAN
+@@ -535,11 +535,11 @@ config LTO_CLANG
+ 	select THIN_ARCHIVES
+ 	select LD_DEAD_CODE_DATA_ELIMINATION
+ 	help
+-          This option enables clang's Link Time Optimization (LTO), which allows
+-          the compiler to optimize the kernel globally at link time. If you
+-          enable this option, the compiler generates LLVM IR instead of object
+-          files, and the actual compilation from IR occurs at the LTO link step,
+-          which may take several minutes.
++	  This option enables clang's Thin Link Time Optimization (ThinLTO), which allows
++	  the compiler to optimize the kernel globally at link time. If you
++	  enable this option, the compiler generates LLVM IR instead of object
++	  files, and the actual compilation from IR occurs at the ThinLTO link
++	  step while retaining parallel backends.
+ 
+           If you select this option, you must compile the kernel with clang >=
+           5.0 (make CC=clang) and GNU gold from binutils >= 2.27, and have the

@@ -1,0 +1,17 @@
+94d6533c8d992760d2745c41810a5ea42ab1fbd7d248e139ef519ad7088c850b  0001-sched-fair-Improve-spreading-of-utilization.patch
+a3cc8e6bbeb094fc90eaf93714500f6c2acdedc80aa177526f225df4ee463121  0002-msm-kgsl-Reduce-latency-while-processing-ioctls.patch
+29db624c41369925146b312c81a54357db6d0794c479866eadb0d7640067cbdc  0003-msm-kgsl-Remove-unneeded-time-profiling-from-ringbuf.patch
+345e23f4413f38565656b74ad4e4d12d2d363fcc4f1430665bff59e9cd939a03  0004-msm-kgsl-run-kgsl-workqueue-as-a-high-prio-wq.patch
+c4cfeec06aeb41036a0d11c83283038659c72b43e0c9bf212b6a79c081901300  0005-msm-kgsl-convert-some-workqueues-to-use-kthreads.patch
+16bd5fd5bcd1ea5bac1c041642eefc567a05351ffc4e5750b7bbb5a674e45162  0006-arm64-Use-optimized-memcmp.patch
+5eda04b2dee8dc5da0122ec37bf08a8e4597589edffcbe2e2818356cb161005f  0007-arm64-lib-memcmp-improve-medium-large-sizes.patch
+98d8cf0bea0c78fd2e5115bc0bda97ca9626d131c6ea250e61415f1f359f5aae  0008-arm64-lib-update-strlen-function.patch
+111ca0e0357792b37cd203a7154e140356b8d1c78416d7910fb1b5e6eec5be31  0009-mm-speed-up-mremap-by-20x-on-large-regions.patch
+f98c3ac208ea2735a4483278f53cefc81db08fcc802a99e0b76f7fde8da140c6  0010-msm-kgsl-use-modern-kthread-worker-API.patch
+cab6e9bfcbb6bd5d2e83f5724ab66edbd392e300de06ac8a853b79641438c9d1  0011-block-cgroups-kconfig-build-bits-for-BFQ-v7r11-4.5.0.patch
+1022cb28f0e0018a89ba9b5440aa6f20007de88a68e1ccd2de854722e7f7b130  0012-block-introduce-the-BFQ-v7r11-I-O-sched-for-4.5.0.patch
+77d16cfe923adeebca496f2f8ea3d33f807e50e79f42146f122a890be1d2af6c  0013-block-bfq-add-Early-Queue-Merge-EQM-to-BFQ-v7r11-for.patch
+7a8a4168a81d7e863b1b2eabde0cec6e2ce8aeb6527bb83a8b8be11aec8cc6f3  0014-block-bfq-Turn-into-BFQ-v8r10-for-4.9.0.patch
+2acbf377dda15cfa8e0966bb5def71389757a43e734748c28b206edc5619323f  0015-msm-kgsl-relax-CPU-latency-votes-on-SDM429.patch
+85c259921c849bf4a3e3e330aba2246eb96b005010dfe8d00941e9309a562dc7  0016-arm64-add-opt-in-SDM429-compiler-tuning.patch
+1d14e2ac8a15a9d889b0499c43028bb1248cc0c9d1162afd1614039ebbd027f5  0017-kbuild-use-ThinLTO-with-the-bundled-Clang-toolchain.patch

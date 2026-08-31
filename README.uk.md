@@ -1,15 +1,16 @@
 # Low-RAM ядро для Lenovo TB-X505L
 
 Це перевірене ядро Linux 4.9.337 для Lenovo Tab M10 HD TB-X505L з 2 ГБ
-RAM. r7 лишається стабільним варіантом для відкату. r8-c3 вже пройшов
-тимчасове і постійне завантаження та додає Binder-кеші, compat vDSO32,
-мережеві/KCAL можливості, а також scheduler, memory та I2C fast paths.
+RAM. r7 лишається стабільним варіантом для відкату. r8-c8 уже пройшов
+тимчасове і постійне завантаження та додає до r8 scheduler/KGSL latency,
+оптимізовані ARM64 hot paths, вибірковий BFQ і A53 ThinLTO-збірку.
 
-[Встановлення](docs/INSTALL.uk.md) · [Збірка](docs/BUILD.md) · [Розробка r8](docs/R8_ENGINEERING.md) · [Динаміка швидкодії](docs/PERFORMANCE_DYNAMICS.md) · [Розробка r7](docs/R7_ENGINEERING.md) · [Логи Camera HAL](docs/CAMERA_HAL_LOGGING.md)
+[Встановлення](docs/INSTALL.uk.md) · [Збірка](docs/BUILD.md) · [Розробка r8](docs/R8_ENGINEERING.md) · [Roadmap ядра](docs/KERNEL_ROADMAP.uk.md) · [Динаміка швидкодії](docs/PERFORMANCE_DYNAMICS.md) · [Розробка r7](docs/R7_ENGINEERING.md) · [Логи Camera HAL](docs/CAMERA_HAL_LOGGING.md)
 
-r8-c3 є pre-release кандидатом: він пройшов автоматичні, навантажувальні та
+r8-c8 є pre-release кандидатом: він пройшов автоматичні, навантажувальні та
 апаратні тести, постійно прошитий на тестовому планшеті, а readback
-boot-розділу точно збігся з перевіреним образом.
+boot-розділу точно збігся з образом `b0186ee9...`. `deadline` лишився I/O
+планувальником за замовчуванням; BFQ доступний для окремих сценаріїв.
 
 ## Для якого пристрою
 
@@ -49,6 +50,9 @@ boot-розділу точно збігся з перевіреним образ
 - c3 обмежує sync-wake на зайнятому CPU, зайвий high-order reclaim і
   compaction unevictable-сторінок, а малі I2C-транзакції тача не ганяє через
   дорожчий DMA-шлях.
+- c4-c8 додає scheduler/KGSL submission fast paths, оптимізовані ARM64
+  `memcmp`/`strlen`, швидший `mremap`, BFQ v8r10, консервативніший KGSL power
+  vote та A53/ThinLTO-збірку без розгону CPU чи GPU.
 
 ## Компроміс безпеки
 
@@ -69,8 +73,10 @@ boot-розділу точно збігся з перевіреним образ
 - Повторні цикли обох камер після виправлення PM QoS.
 - Точний SHA-256 записаного boot-розділу після прошивки r7.
 - Чистий kernel fault scan першого постійного запуску.
-- Повний production-validator c3, 512 МіБ memory-pressure і точний readback
+- Повний production-validator c8, 512 МіБ memory-pressure і точний readback
   постійного boot-розділу.
+- Два набори ThinLTO-тестів після контрольного повернення на baseline: типовий
+  wake latency покращився, а шумні eMMC-регресії не приховані.
 
 Мікрофон тестового планшета працює слабко; поведінка однакова на заводському та новому ядрі, тому ймовірна механічна проблема.
 

@@ -1,0 +1,40 @@
+From 2ca500c34f7ae774eb4c0f1d1596eafedbd56976 Mon Sep 17 00:00:00 2001
+From: Yevhenii Starychenko <Evgeniistarychenko@gmail.com>
+Date: Mon, 31 Aug 2026 20:00:53 +0000
+Subject: [PATCH 10/17] msm: kgsl: use modern kthread worker API
+
+---
+ drivers/gpu/msm/kgsl_events.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/gpu/msm/kgsl_events.c b/drivers/gpu/msm/kgsl_events.c
+index d56ec677ff8..687446be203 100644
+--- a/drivers/gpu/msm/kgsl_events.c
++++ b/drivers/gpu/msm/kgsl_events.c
+@@ -32,7 +32,7 @@ static inline void signal_event(struct kgsl_device *device,
+ {
+ 	list_del(&event->node);
+ 	event->result = result;
+-	queue_kthread_work(&kgsl_driver.worker, &event->work);
++	kthread_queue_work(&kgsl_driver.worker, &event->work);
+ }
+ 
+ /**
+@@ -286,7 +286,7 @@ int kgsl_add_event(struct kgsl_device *device, struct kgsl_event_group *group,
+ 	event->created = jiffies;
+ 	event->group = group;
+ 
+-	init_kthread_work(&event->work, _kgsl_event_worker);
++	kthread_init_work(&event->work, _kgsl_event_worker);
+ 
+ 	trace_kgsl_register_event(KGSL_CONTEXT_ID(context), timestamp, func);
+ 
+@@ -301,7 +301,7 @@ int kgsl_add_event(struct kgsl_device *device, struct kgsl_event_group *group,
+ 
+ 	if (timestamp_cmp(retired, timestamp) >= 0) {
+ 		event->result = KGSL_EVENT_RETIRED;
+-		queue_kthread_work(&kgsl_driver.worker, &event->work);
++		kthread_queue_work(&kgsl_driver.worker, &event->work);
+ 		spin_unlock(&group->lock);
+ 		return 0;
+ 	}

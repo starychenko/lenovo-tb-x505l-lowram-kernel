@@ -1,0 +1,235 @@
+From c2d201a4ab0a5e53267f0460d8c04285eb12daff Mon Sep 17 00:00:00 2001
+From: Sultan Alsawaf <sultan@kerneltoast.com>
+Date: Wed, 12 May 2021 02:47:49 -0400
+Subject: [PATCH 03/17] msm: kgsl: Remove unneeded time profiling from
+ ringbuffer submission
+
+The time profiling here is only used to provide additional debug info
+for a context dump as well as a tracepoint. It adds non-trivial overhead
+to ringbuffer submission since it accesses GPU registers, so remove it
+along with the tracepoint since we're not debugging adreno.
+
+Signed-off-by: Sultan Alsawaf <sultan@kerneltoast.com>
+(cherry picked from commit 08a263480149f201878946a47ec824ae00a8d7f0)
+---
+ drivers/gpu/msm/adreno_dispatch.c | 23 +---------------
+ drivers/gpu/msm/adreno_drawctxt.c | 21 ---------------
+ drivers/gpu/msm/adreno_drawctxt.h |  7 -----
+ drivers/gpu/msm/adreno_trace.h    | 45 -------------------------------
+ drivers/gpu/msm/kgsl_drawobj.h    |  3 ---
+ 5 files changed, 1 insertion(+), 98 deletions(-)
+
+diff --git a/drivers/gpu/msm/adreno_dispatch.c b/drivers/gpu/msm/adreno_dispatch.c
+index 7c08a323600..fc61f0df15f 100644
+--- a/drivers/gpu/msm/adreno_dispatch.c
++++ b/drivers/gpu/msm/adreno_dispatch.c
+@@ -552,12 +552,8 @@ static int sendcmd(struct adreno_device *adreno_dev,
+ 	struct kgsl_drawobj *drawobj = DRAWOBJ(cmdobj);
+ 	struct adreno_gpudev *gpudev = ADRENO_GPU_DEVICE(adreno_dev);
+ 	struct adreno_dispatcher *dispatcher = &adreno_dev->dispatcher;
+-	struct adreno_context *drawctxt = ADRENO_CONTEXT(drawobj->context);
+ 	struct adreno_dispatcher_drawqueue *dispatch_q =
+ 				ADRENO_DRAWOBJ_DISPATCH_DRAWQUEUE(drawobj);
+-	struct adreno_submit_time time;
+-	uint64_t secs = 0;
+-	unsigned long nsecs = 0;
+ 	int ret;
+ 
+ 	mutex_lock(&device->mutex);
+@@ -566,8 +562,6 @@ static int sendcmd(struct adreno_device *adreno_dev,
+ 		return -EBUSY;
+ 	}
+ 
+-	memset(&time, 0x0, sizeof(time));
+-
+ 	dispatcher->inflight++;
+ 	dispatch_q->inflight++;
+ 
+@@ -593,7 +587,7 @@ static int sendcmd(struct adreno_device *adreno_dev,
+ 			ADRENO_DRAWOBJ_PROFILE_COUNT;
+ 	}
+ 
+-	ret = adreno_ringbuffer_submitcmd(adreno_dev, cmdobj, &time);
++	ret = adreno_ringbuffer_submitcmd(adreno_dev, cmdobj, NULL);
+ 
+ 	/*
+ 	 * On the first command, if the submission was successful, then read the
+@@ -653,17 +647,8 @@ static int sendcmd(struct adreno_device *adreno_dev,
+ 		return ret;
+ 	}
+ 
+-	secs = time.ktime;
+-	nsecs = do_div(secs, 1000000000);
+-
+-	trace_adreno_cmdbatch_submitted(drawobj, (int) dispatcher->inflight,
+-		time.ticks, (unsigned long) secs, nsecs / 1000, drawctxt->rb,
+-		adreno_get_rptr(drawctxt->rb));
+-
+ 	mutex_unlock(&device->mutex);
+ 
+-	cmdobj->submit_ticks = time.ticks;
+-
+ 	dispatch_q->cmd_q[dispatch_q->tail] = cmdobj;
+ 	dispatch_q->tail = (dispatch_q->tail + 1) %
+ 		ADRENO_DISPATCH_DRAWQUEUE_SIZE;
+@@ -2367,12 +2352,6 @@ static void retire_cmdobj(struct adreno_device *adreno_dev,
+ 			ADRENO_DRAWOBJ_RB(drawobj),
+ 			adreno_get_rptr(drawctxt->rb), cmdobj->fault_recovery);
+ 
+-	drawctxt->submit_retire_ticks[drawctxt->ticks_index] =
+-		end - cmdobj->submit_ticks;
+-
+-	drawctxt->ticks_index = (drawctxt->ticks_index + 1) %
+-		SUBMIT_RETIRE_TICKS_SIZE;
+-
+ 	kgsl_drawobj_destroy(drawobj);
+ }
+ 
+diff --git a/drivers/gpu/msm/adreno_drawctxt.c b/drivers/gpu/msm/adreno_drawctxt.c
+index 6af6e23c797..de54820fb35 100644
+--- a/drivers/gpu/msm/adreno_drawctxt.c
++++ b/drivers/gpu/msm/adreno_drawctxt.c
+@@ -52,8 +52,6 @@ void adreno_drawctxt_dump(struct kgsl_device *device,
+ {
+ 	unsigned int queue, start, retire;
+ 	struct adreno_context *drawctxt = ADRENO_CONTEXT(context);
+-	int index, pos;
+-	char buf[120];
+ 
+ 	kgsl_readtimestamp(device, context, KGSL_TIMESTAMP_QUEUED, &queue);
+ 	kgsl_readtimestamp(device, context, KGSL_TIMESTAMP_CONSUMED, &start);
+@@ -114,25 +112,6 @@ void adreno_drawctxt_dump(struct kgsl_device *device,
+ 	}
+ 
+ stats:
+-	memset(buf, 0, sizeof(buf));
+-
+-	pos = 0;
+-
+-	for (index = 0; index < SUBMIT_RETIRE_TICKS_SIZE; index++) {
+-		uint64_t msecs;
+-		unsigned int usecs;
+-
+-		if (!drawctxt->submit_retire_ticks[index])
+-			continue;
+-		msecs = drawctxt->submit_retire_ticks[index] * 10;
+-		usecs = do_div(msecs, 192);
+-		usecs = do_div(msecs, 1000);
+-		pos += snprintf(buf + pos, sizeof(buf) - pos, "%d.%0d ",
+-			(unsigned int)msecs, usecs);
+-	}
+-	dev_err(device->dev, "  context[%d]: submit times: %s\n",
+-		context->id, buf);
+-
+ 	spin_unlock_bh(&drawctxt->lock);
+ }
+ 
+diff --git a/drivers/gpu/msm/adreno_drawctxt.h b/drivers/gpu/msm/adreno_drawctxt.h
+index 4857c785155..e4132d1a27d 100644
+--- a/drivers/gpu/msm/adreno_drawctxt.h
++++ b/drivers/gpu/msm/adreno_drawctxt.h
+@@ -19,7 +19,6 @@ struct adreno_context_type {
+ };
+ 
+ #define ADRENO_CONTEXT_DRAWQUEUE_SIZE 128
+-#define SUBMIT_RETIRE_TICKS_SIZE 7
+ 
+ struct kgsl_device;
+ struct adreno_device;
+@@ -47,10 +46,6 @@ struct kgsl_context;
+  * @queued_timestamp: The last timestamp that was queued on this context
+  * @rb: The ringbuffer in which this context submits commands.
+  * @submitted_timestamp: The last timestamp that was submitted for this context
+- * @submit_retire_ticks: Array to hold command obj execution times from submit
+- *                       to retire
+- * @ticks_index: The index into submit_retire_ticks[] where the new delta will
+- *		 be written.
+  * @active_node: Linkage for nodes in active_list
+  * @active_time: Time when this context last seen
+  */
+@@ -77,8 +72,6 @@ struct adreno_context {
+ 	unsigned int queued_timestamp;
+ 	struct adreno_ringbuffer *rb;
+ 	unsigned int submitted_timestamp;
+-	uint64_t submit_retire_ticks[SUBMIT_RETIRE_TICKS_SIZE];
+-	int ticks_index;
+ 
+ 	struct list_head active_node;
+ 	unsigned long active_time;
+diff --git a/drivers/gpu/msm/adreno_trace.h b/drivers/gpu/msm/adreno_trace.h
+index bf5e798839b..ef8dd06e781 100644
+--- a/drivers/gpu/msm/adreno_trace.h
++++ b/drivers/gpu/msm/adreno_trace.h
+@@ -52,51 +52,6 @@ TRACE_EVENT(adreno_cmdbatch_queued,
+ 	)
+ );
+ 
+-TRACE_EVENT(adreno_cmdbatch_submitted,
+-	TP_PROTO(struct kgsl_drawobj *drawobj, int inflight, uint64_t ticks,
+-		unsigned long secs, unsigned long usecs,
+-		struct adreno_ringbuffer *rb, unsigned int rptr),
+-	TP_ARGS(drawobj, inflight, ticks, secs, usecs, rb, rptr),
+-	TP_STRUCT__entry(
+-		__field(unsigned int, id)
+-		__field(unsigned int, timestamp)
+-		__field(int, inflight)
+-		__field(unsigned int, flags)
+-		__field(uint64_t, ticks)
+-		__field(unsigned long, secs)
+-		__field(unsigned long, usecs)
+-		__field(int, prio)
+-		__field(int, rb_id)
+-		__field(unsigned int, rptr)
+-		__field(unsigned int, wptr)
+-		__field(int, q_inflight)
+-	),
+-	TP_fast_assign(
+-		__entry->id = drawobj->context->id;
+-		__entry->timestamp = drawobj->timestamp;
+-		__entry->inflight = inflight;
+-		__entry->flags = drawobj->flags;
+-		__entry->ticks = ticks;
+-		__entry->secs = secs;
+-		__entry->usecs = usecs;
+-		__entry->prio = drawobj->context->priority;
+-		__entry->rb_id = rb->id;
+-		__entry->rptr = rptr;
+-		__entry->wptr = rb->wptr;
+-		__entry->q_inflight = rb->dispatch_q.inflight;
+-	),
+-	TP_printk(
+-		"ctx=%u ctx_prio=%d ts=%u inflight=%d flags=%s ticks=%lld time=%lu.%0lu rb_id=%d r/w=%x/%x, q_inflight=%d",
+-			__entry->id, __entry->prio, __entry->timestamp,
+-			__entry->inflight,
+-			__entry->flags ? __print_flags(__entry->flags, "|",
+-				KGSL_DRAWOBJ_FLAGS) : "none",
+-			__entry->ticks, __entry->secs, __entry->usecs,
+-			__entry->rb_id, __entry->rptr, __entry->wptr,
+-			__entry->q_inflight
+-	)
+-);
+-
+ TRACE_EVENT(adreno_cmdbatch_retired,
+ 	TP_PROTO(struct kgsl_drawobj *drawobj, int inflight,
+ 		uint64_t start, uint64_t retire,
+diff --git a/drivers/gpu/msm/kgsl_drawobj.h b/drivers/gpu/msm/kgsl_drawobj.h
+index bd32f5e503a..a7341008544 100644
+--- a/drivers/gpu/msm/kgsl_drawobj.h
++++ b/drivers/gpu/msm/kgsl_drawobj.h
+@@ -66,8 +66,6 @@ struct kgsl_drawobj {
+  * for easy access
+  * @profile_index: Index to store the start/stop ticks in the kernel profiling
+  * buffer
+- * @submit_ticks: Variable to hold ticks at the time of
+- *     command obj submit.
+ 
+  */
+ struct kgsl_drawobj_cmd {
+@@ -82,7 +80,6 @@ struct kgsl_drawobj_cmd {
+ 	struct kgsl_mem_entry *profiling_buf_entry;
+ 	uint64_t profiling_buffer_gpuaddr;
+ 	unsigned int profile_index;
+-	uint64_t submit_ticks;
+ };
+ 
+ /**

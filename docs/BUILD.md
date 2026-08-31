@@ -1,5 +1,44 @@
 # Reproducing the kernel build
 
+## r8-c8 ThinLTO release-candidate build
+
+r8-c8 uses source commit
+`40a80480379791338dfacb3d8a2b3d755c655bad`, reconstructed from r8-c3 by the
+ordered `patches/r8-c4-c8/` series.
+
+```bash
+export TB_X505L_BUILD_TIMESTAMP='Tue Sep 1 00:52:00 UTC 2026'
+export TB_X505L_BUILD_VERSION=22
+export TB_X505L_BUILD_USER=codex-r8
+export TB_X505L_BUILD_HOST=tb-x505l
+export TB_X505L_BUILD_JOBS=8
+export TB_X505L_LDGOLD=/usr/bin/aarch64-linux-gnu-ld.gold
+
+scripts/build-r8-candidate.sh \
+  /path/to/android_kernel_lenovo_4.9.337-r8-c8 \
+  /path/to/clang-r365631c \
+  /path/to/aarch64-linux-android-4.9 \
+  configs/tb-x505l-r8-c8-thinlto.config \
+  /fresh/output/r8-c8-thinlto \
+  /path/to/signing_key.pem \
+  /path/to/arm-linux-androideabi-4.9
+```
+
+The final compile uses Android Clang 9.0.8 r365631c. ThinLTO linking requires
+GNU gold 1.16; the helper prints and verifies the executable selected through
+`TB_X505L_LDGOLD`. The older bundled gold 1.12 produced an A53 erratum warning
+and is not the qualified linker.
+
+Expected hashes:
+
+```text
+config          06571aa81ec85ee3a781d7439816859b36338ade28f00c3608acb06c893deb2f
+Image           59afeab3bb758763af773b4b126158a563de89238ab1d83e4ce36757071d888c
+System.map      ffe8595e6f833d872d5b90ff8252789d39647456e8d3fb79925a3326bd68338d
+Module.symvers  c5c30705a62e06a5ca65c9404eac1decab8b5991186ce935fd32e5c60f13e7d9
+boot.img        b0186ee9d2968051af7224802f8c040332f7672324779f3c91c7f31534d555bf
+```
+
 ## r8-c3 release-candidate build
 
 r8-c3 uses source commit

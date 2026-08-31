@@ -1,4 +1,4 @@
-# Measured performance dynamics from r5 to r8-c3
+# Measured performance dynamics from r5 to r8-c8
 
 ## Short answer
 
@@ -22,6 +22,25 @@ is:
 | r7 | Linux 4.9.205 -> 4.9.337 and vendor/camera compatibility | Mostly a maintenance/stability release; vs the 4.9.227 control, memory copy +10.04% and read +4.45%, UI and eMMC mixed |
 | r8-c2 | Binder/vDSO/network/KCAL feature pack | New useful paths verified; no general speed claim |
 | r8-c3 | Scheduler/reclaim/compaction/I2C fast paths plus corrected production profile | Cross-core loaded mean -21.82% and p99 -63.17% vs c2 in two native runs; Cromite mean -6.08% and Settings p95/p99 about -36% in the production UI run |
+| r8-c8 | Scheduler/KGSL, ARM64/mremap, optional BFQ and A53 ThinLTO | vs c4/c5 baseline: typical same-core wake latency -5.5% to -8.6%, cross-core p50/p95/p99 -4.9%/-5.8%/-19.7%; eMMC tails remain mixed |
+
+## c8 targeted compiler result
+
+The final comparison uses five c4/c5 baseline samples and ten ThinLTO samples
+split around a return to baseline. This reduces, but does not eliminate,
+thermal and order bias.
+
+| Metric | c8 vs c4/c5 |
+|---|---:|
+| same-core idle p50 / p95 / p99 | -5.63% / -7.72% / -8.61% latency |
+| same-core loaded p50 / p95 / p99 | -5.45% / -5.70% / -7.11% latency |
+| cross-core loaded p50 / p95 / p99 | -4.91% / -5.79% / -19.70% latency |
+| sequential read / write | +0.77% / +5.52% |
+| random-read IOPS | +4.90% |
+| random-write p99 | +117.89% latency regression |
+
+The repeated wake-latency result justified retaining ThinLTO. Storage is too
+volatile to claim a general gain, and `deadline` remains the default.
 
 ## r6: the clearest controlled system gain
 

@@ -1,0 +1,83 @@
+From 72bafa1ab7374527875bc3ae68f56e6c409aac84 Mon Sep 17 00:00:00 2001
+From: Tim Murray <timmurray@google.com>
+Date: Mon, 20 Feb 2017 15:59:32 +0530
+Subject: [PATCH 05/17] msm: kgsl: convert some workqueues to use kthreads.
+
+adreno_dispatch_work and _kgsl_event_worker are both low-latency
+low-runtime functions that are in the critical path of GPU
+rendering. Moving them out of workqueues and into a dedicated FIFO
+kthread avoids significant jitter.
+
+bug 30342017
+
+Git-commit: 1a7a93bd33f48a369de29f6f2b56251127bf6ab4
+Git-repo: https://android.googlesource.com/kernel/msm
+
+Change-Id: I83562f488c34c2ab001c8ea79e7f09b633c658bd
+Signed-off-by: Tim Murray <timmurray@google.com>
+Signed-off-by: Abhilash Kumar <krabhi@codeaurora.org>
+
+ Conflicts:
+	drivers/gpu/msm/adreno_dispatch.c
+	drivers/gpu/msm/kgsl.c
+
+Signed-off-by: Lau <laststandrighthere@gmail.com>
+(cherry picked from commit 0d843cbe5cc9f3dd33299657ab068c36d148f522)
+---
+ drivers/gpu/msm/kgsl.h        | 2 +-
+ drivers/gpu/msm/kgsl_events.c | 8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/gpu/msm/kgsl.h b/drivers/gpu/msm/kgsl.h
+index 84390325f1d..576fc55c36b 100644
+--- a/drivers/gpu/msm/kgsl.h
++++ b/drivers/gpu/msm/kgsl.h
+@@ -323,7 +323,7 @@ struct kgsl_event {
+ 	void *priv;
+ 	struct list_head node;
+ 	unsigned int created;
+-	struct work_struct work;
++	struct kthread_work work;
+ 	int result;
+ 	struct kgsl_event_group *group;
+ };
+diff --git a/drivers/gpu/msm/kgsl_events.c b/drivers/gpu/msm/kgsl_events.c
+index 47582daf87d..d56ec677ff8 100644
+--- a/drivers/gpu/msm/kgsl_events.c
++++ b/drivers/gpu/msm/kgsl_events.c
+@@ -32,7 +32,7 @@ static inline void signal_event(struct kgsl_device *device,
+ {
+ 	list_del(&event->node);
+ 	event->result = result;
+-	queue_work(device->events_wq, &event->work);
++	queue_kthread_work(&kgsl_driver.worker, &event->work);
+ }
+ 
+ /**
+@@ -42,7 +42,7 @@ static inline void signal_event(struct kgsl_device *device,
+  * Each event callback has its own work struct and is run on a event specific
+  * workqeuue.  This is the worker that queues up the event callback function.
+  */
+-static void _kgsl_event_worker(struct work_struct *work)
++static void _kgsl_event_worker(struct kthread_work *work)
+ {
+ 	struct kgsl_event *event = container_of(work, struct kgsl_event, work);
+ 	int id = KGSL_CONTEXT_ID(event->context);
+@@ -286,7 +286,7 @@ int kgsl_add_event(struct kgsl_device *device, struct kgsl_event_group *group,
+ 	event->created = jiffies;
+ 	event->group = group;
+ 
+-	INIT_WORK(&event->work, _kgsl_event_worker);
++	init_kthread_work(&event->work, _kgsl_event_worker);
+ 
+ 	trace_kgsl_register_event(KGSL_CONTEXT_ID(context), timestamp, func);
+ 
+@@ -301,7 +301,7 @@ int kgsl_add_event(struct kgsl_device *device, struct kgsl_event_group *group,
+ 
+ 	if (timestamp_cmp(retired, timestamp) >= 0) {
+ 		event->result = KGSL_EVENT_RETIRED;
+-		queue_work(device->events_wq, &event->work);
++		queue_kthread_work(&kgsl_driver.worker, &event->work);
+ 		spin_unlock(&group->lock);
+ 		return 0;
+ 	}

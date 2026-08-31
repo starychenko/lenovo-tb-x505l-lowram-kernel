@@ -1,0 +1,17 @@
+0001-sched-fair-Improve-spreading-of-utilization.patch
+0002-msm-kgsl-Reduce-latency-while-processing-ioctls.patch
+0003-msm-kgsl-Remove-unneeded-time-profiling-from-ringbuf.patch
+0004-msm-kgsl-run-kgsl-workqueue-as-a-high-prio-wq.patch
+0005-msm-kgsl-convert-some-workqueues-to-use-kthreads.patch
+0006-arm64-Use-optimized-memcmp.patch
+0007-arm64-lib-memcmp-improve-medium-large-sizes.patch
+0008-arm64-lib-update-strlen-function.patch
+0009-mm-speed-up-mremap-by-20x-on-large-regions.patch
+0010-msm-kgsl-use-modern-kthread-worker-API.patch
+0011-block-cgroups-kconfig-build-bits-for-BFQ-v7r11-4.5.0.patch
+0012-block-introduce-the-BFQ-v7r11-I-O-sched-for-4.5.0.patch
+0013-block-bfq-add-Early-Queue-Merge-EQM-to-BFQ-v7r11-for.patch
+0014-block-bfq-Turn-into-BFQ-v8r10-for-4.9.0.patch
+0015-msm-kgsl-relax-CPU-latency-votes-on-SDM429.patch
+0016-arm64-add-opt-in-SDM429-compiler-tuning.patch
+0017-kbuild-use-ThinLTO-with-the-bundled-Clang-toolchain.patch

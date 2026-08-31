@@ -1,0 +1,36 @@
+kernel=4.9.337-tbx505l-r8-c8-a53+
+iteration=1
+test=latency mode=same-core samples=10000 load_threads=0 mean_us=17.342 p50_us=18.177 p95_us=21.406 p99_us=22.032 max_us=186.354 checksum=0
+test=latency mode=same-core samples=10000 load_threads=4 mean_us=28.332 p50_us=18.281 p95_us=19.166 p99_us=25.261 max_us=14819.948 checksum=13923306482691657736
+test=latency mode=cross-core samples=10000 load_threads=4 mean_us=34.614 p50_us=19.636 p95_us=20.000 p99_us=20.834 max_us=9552.708 checksum=883223914202938623
+test=io-sequential size_mib=16 direct=1 write_mib_s=70.269 read_mib_s=266.307
+test=io-random operation=read block_kib=4 operations=256 mean_us=134.744 p50_us=130.416 p95_us=199.584 p99_us=308.125 max_us=509.687 iops=7421.488
+test=io-random operation=write block_kib=4 operations=256 mean_us=424.098 p50_us=338.698 p95_us=528.490 p99_us=2434.635 max_us=4783.385 iops=2357.945
+iteration=2
+test=latency mode=same-core samples=10000 load_threads=0 mean_us=16.271 p50_us=17.864 p95_us=18.490 p99_us=20.104 max_us=139.271 checksum=0
+test=latency mode=same-core samples=10000 load_threads=4 mean_us=28.567 p50_us=18.541 p95_us=19.115 p99_us=21.146 max_us=14540.417 checksum=2226242556825232591
+test=latency mode=cross-core samples=10000 load_threads=4 mean_us=35.846 p50_us=19.740 p95_us=20.312 p99_us=31.510 max_us=9616.614 checksum=8230275071532399331
+test=io-sequential size_mib=16 direct=1 write_mib_s=62.538 read_mib_s=274.224
+test=io-random operation=read block_kib=4 operations=256 mean_us=142.025 p50_us=131.041 p95_us=206.093 p99_us=318.906 max_us=1674.427 iops=7041.008
+test=io-random operation=write block_kib=4 operations=256 mean_us=409.855 p50_us=396.615 p95_us=555.833 p99_us=823.907 max_us=1702.656 iops=2439.888
+iteration=3
+test=latency mode=same-core samples=10000 load_threads=0 mean_us=16.600 p50_us=18.073 p95_us=18.490 p99_us=20.000 max_us=171.042 checksum=0
+test=latency mode=same-core samples=10000 load_threads=4 mean_us=27.840 p50_us=18.541 p95_us=18.854 p99_us=19.375 max_us=12473.959 checksum=17246699285958148798
+test=latency mode=cross-core samples=10000 load_threads=4 mean_us=45.195 p50_us=19.739 p95_us=20.156 p99_us=76.927 max_us=19743.281 checksum=1844425447175173179
+test=io-sequential size_mib=16 direct=1 write_mib_s=63.564 read_mib_s=272.497
+test=io-random operation=read block_kib=4 operations=256 mean_us=144.025 p50_us=131.719 p95_us=209.583 p99_us=391.094 max_us=546.719 iops=6943.246
+test=io-random operation=write block_kib=4 operations=256 mean_us=427.538 p50_us=399.115 p95_us=562.031 p99_us=1880.781 max_us=2231.146 iops=2338.972
+iteration=4
+test=latency mode=same-core samples=10000 load_threads=0 mean_us=17.277 p50_us=18.177 p95_us=19.115 p99_us=20.833 max_us=143.906 checksum=0
+test=latency mode=same-core samples=10000 load_threads=4 mean_us=27.809 p50_us=18.281 p95_us=18.594 p99_us=19.167 max_us=14448.282 checksum=15622929027775226788
+test=latency mode=cross-core samples=10000 load_threads=4 mean_us=38.817 p50_us=19.688 p95_us=20.000 p99_us=27.239 max_us=11966.980 checksum=6671914985158478151
+test=io-sequential size_mib=16 direct=1 write_mib_s=67.245 read_mib_s=275.657
+test=io-random operation=read block_kib=4 operations=256 mean_us=135.487 p50_us=131.406 p95_us=200.052 p99_us=329.895 max_us=648.281 iops=7380.801
+test=io-random operation=write block_kib=4 operations=256 mean_us=430.296 p50_us=401.093 p95_us=525.052 p99_us=1936.042 max_us=2167.084 iops=2323.984
+iteration=5
+test=latency mode=same-core samples=10000 load_threads=0 mean_us=16.725 p50_us=18.281 p95_us=18.698 p99_us=20.468 max_us=155.573 checksum=0
+test=latency mode=same-core samples=10000 load_threads=4 mean_us=30.457 p50_us=18.334 p95_us=18.698 p99_us=19.270 max_us=16186.406 checksum=10852250705626472345
+test=latency mode=cross-core samples=10000 load_threads=4 mean_us=38.832 p50_us=19.740 p95_us=20.052 p99_us=23.698 max_us=12459.010 checksum=18238267591301339507
+test=io-sequential size_mib=16 direct=1 write_mib_s=69.634 read_mib_s=267.749
+test=io-random operation=read block_kib=4 operations=256 mean_us=142.373 p50_us=131.146 p95_us=201.406 p99_us=262.395 max_us=2284.636 iops=7023.822
+test=io-random operation=write block_kib=4 operations=256 mean_us=426.150 p50_us=399.115 p95_us=582.656 p99_us=1667.656 max_us=1839.688 iops=2346.589

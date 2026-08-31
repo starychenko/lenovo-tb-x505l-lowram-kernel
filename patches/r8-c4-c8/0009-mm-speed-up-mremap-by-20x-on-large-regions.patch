@@ -1,0 +1,159 @@
+From 65e9a4d0a2f1f7975f8584a2aff202ad7e04a787 Mon Sep 17 00:00:00 2001
+From: "Joel Fernandes (Google)" <joel@joelfernandes.org>
+Date: Thu, 3 Jan 2019 15:28:38 -0800
+Subject: [PATCH 09/17] mm: speed up mremap by 20x on large regions
+
+Android needs to mremap large regions of memory during memory management
+related operations.  The mremap system call can be really slow if THP is
+not enabled.  The bottleneck is move_page_tables, which is copying each
+pte at a time, and can be really slow across a large map.  Turning on
+THP may not be a viable option, and is not for us.  This patch speeds up
+the performance for non-THP system by copying at the PMD level when
+possible.
+
+The speedup is an order of magnitude on x86 (~20x).  On a 1GB mremap,
+the mremap completion times drops from 3.4-3.6 milliseconds to 144-160
+microseconds.
+
+Before:
+Total mremap time for 1GB data: 3521942 nanoseconds.
+Total mremap time for 1GB data: 3449229 nanoseconds.
+Total mremap time for 1GB data: 3488230 nanoseconds.
+
+After:
+Total mremap time for 1GB data: 150279 nanoseconds.
+Total mremap time for 1GB data: 144665 nanoseconds.
+Total mremap time for 1GB data: 158708 nanoseconds.
+
+If THP is enabled the optimization is mostly skipped except in certain
+situations.
+
+[joel@joelfernandes.org: fix 'move_normal_pmd' unused function warning]
+  Link: http://lkml.kernel.org/r/20181108224457.GB209347@google.com
+Link: http://lkml.kernel.org/r/20181108181201.88826-3-joelaf@google.com
+Signed-off-by: Joel Fernandes (Google) <joel@joelfernandes.org>
+Acked-by: Kirill A. Shutemov <kirill@shutemov.name>
+Reviewed-by: William Kucharski <william.kucharski@oracle.com>
+Cc: Julia Lawall <Julia.Lawall@lip6.fr>
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: Will Deacon <will.deacon@arm.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+Signed-off-by: Diab Neiroukh <lazerl0rd@thezest.dev>
+(cherry picked from commit 302802a42e1fe05ae27f7733d316a5dbceff8b29)
+---
+ arch/Kconfig       |  5 ++++
+ arch/arm64/Kconfig |  1 +
+ mm/mremap.c        | 63 ++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 69 insertions(+)
+
+diff --git a/arch/Kconfig b/arch/Kconfig
+index 0ecbd6d423f..edff29fc3c0 100644
+--- a/arch/Kconfig
++++ b/arch/Kconfig
+@@ -616,6 +616,11 @@ config HAVE_IRQ_TIME_ACCOUNTING
+ 	  Archs need to ensure they use a high enough resolution clock to
+ 	  support irq time accounting and then call enable_sched_clock_irqtime().
+ 
++config HAVE_MOVE_PMD
++	bool
++	help
++	  Archs that select this are able to move page tables at the PMD level.
++
+ config HAVE_ARCH_TRANSPARENT_HUGEPAGE
+ 	bool
+ 
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index 13533460bdd..0304bf212c3 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -106,6 +106,7 @@ config ARM64
+ 	select HAVE_IRQ_TIME_ACCOUNTING
+ 	select HAVE_MEMBLOCK
+ 	select HAVE_MEMBLOCK_NODE_MAP if NUMA
++	select HAVE_MOVE_PMD
+ 	select HAVE_PATA_PLATFORM
+ 	select HAVE_PERF_EVENTS
+ 	select HAVE_PERF_REGS
+diff --git a/mm/mremap.c b/mm/mremap.c
+index d323e8e1008..c584ce9ca3c 100644
+--- a/mm/mremap.c
++++ b/mm/mremap.c
+@@ -181,6 +181,51 @@ static void move_ptes(struct vm_area_struct *vma, pmd_t *old_pmd,
+ }
+ 
+ #define LATENCY_LIMIT	(64 * PAGE_SIZE)
++#ifdef CONFIG_HAVE_MOVE_PMD
++static bool move_normal_pmd(struct vm_area_struct *vma, unsigned long old_addr,
++		  unsigned long new_addr, unsigned long old_end,
++		  pmd_t *old_pmd, pmd_t *new_pmd)
++{
++	spinlock_t *old_ptl, *new_ptl;
++	struct mm_struct *mm = vma->vm_mm;
++	pmd_t pmd;
++
++	if ((old_addr & ~PMD_MASK) || (new_addr & ~PMD_MASK)
++	    || old_end - old_addr < PMD_SIZE)
++		return false;
++
++	/*
++	 * The destination pmd shouldn't be established, free_pgtables()
++	 * should have release it.
++	 */
++	if (WARN_ON(!pmd_none(*new_pmd)))
++		return false;
++
++	/*
++	 * We don't have to worry about the ordering of src and dst
++	 * ptlocks because exclusive mmap_sem prevents deadlock.
++	 */
++	old_ptl = pmd_lock(vma->vm_mm, old_pmd);
++	new_ptl = pmd_lockptr(mm, new_pmd);
++	if (new_ptl != old_ptl)
++		spin_lock_nested(new_ptl, SINGLE_DEPTH_NESTING);
++
++	/* Clear the pmd */
++	pmd = *old_pmd;
++	pmd_clear(old_pmd);
++
++	VM_BUG_ON(!pmd_none(*new_pmd));
++
++	/* Set the new pmd */
++	set_pmd_at(mm, new_addr, new_pmd, pmd);
++	flush_tlb_range(vma, old_addr, old_addr + PMD_SIZE);
++	if (new_ptl != old_ptl)
++		spin_unlock(new_ptl);
++	spin_unlock(old_ptl);
++
++	return true;
++}
++#endif
+ 
+ unsigned long move_page_tables(struct vm_area_struct *vma,
+ 		unsigned long old_addr, struct vm_area_struct *new_vma,
+@@ -231,7 +276,25 @@ unsigned long move_page_tables(struct vm_area_struct *vma,
+ 			split_huge_pmd(vma, old_pmd, old_addr);
+ 			if (pmd_trans_unstable(old_pmd))
+ 				continue;
++		} else if (extent == PMD_SIZE) {
++#ifdef CONFIG_HAVE_MOVE_PMD
++			/*
++			 * If the extent is PMD-sized, try to speed the move by
++			 * moving at the PMD level if possible.
++			 */
++			bool moved;
++
++			if (need_rmap_locks)
++				take_rmap_locks(vma);
++			moved = move_normal_pmd(vma, old_addr, new_addr,
++					old_end, old_pmd, new_pmd);
++			if (need_rmap_locks)
++				drop_rmap_locks(vma);
++			if (moved)
++				continue;
++#endif
+ 		}
++
+ 		if (pte_alloc(new_vma->vm_mm, new_pmd, new_addr))
+ 			break;
+ 		next = (new_addr + PMD_SIZE) & PMD_MASK;

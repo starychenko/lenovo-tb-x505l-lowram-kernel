@@ -118,7 +118,14 @@ for symbol in \
     CONFIG_NET_SCH_FQ_CODEL=y \
     CONFIG_NET_SCH_FQ=y \
     CONFIG_FB_MSM_MDSS_KCAL_CTRL=y \
-    CONFIG_ARM_ARCH_TIMER_VCT_ACCESS=y
+    CONFIG_ARM_ARCH_TIMER_VCT_ACCESS=y \
+    CONFIG_IOSCHED_BFQ=y \
+    CONFIG_ARCH_SUPPORTS_OPTIMIZED_INLINING=y \
+    CONFIG_OPTIMIZE_INLINING=y \
+    CONFIG_ARM64_TUNE_CORTEX_A53=y \
+    CONFIG_THIN_ARCHIVES=y \
+    CONFIG_LTO=y \
+    CONFIG_LTO_CLANG=y
 do
     if zcat /proc/config.gz 2>/dev/null | grep -Fqx "$symbol"; then
         pass kernel_config "$symbol"
@@ -126,6 +133,16 @@ do
         fail kernel_config "$symbol"
     fi
 done
+
+block_schedulers="$(cat /sys/block/mmcblk0/queue/scheduler 2>/dev/null)"
+expect_word scheduler_bfq bfq "$block_schedulers"
+case "$block_schedulers" in
+    *'[deadline]'*) pass scheduler_default deadline ;;
+    *) fail scheduler_default "expected deadline in: $block_schedulers" ;;
+esac
+
+expect_value kgsl_active_latency \
+    /sys/class/kgsl/kgsl-3d0/pmqos_active_latency 1000
 
 available_cc="$(cat /proc/sys/net/ipv4/tcp_available_congestion_control)"
 expect_word congestion_bbr bbr "$available_cc"

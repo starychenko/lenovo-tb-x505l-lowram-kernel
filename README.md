@@ -1,9 +1,9 @@
 # Lenovo TB-X505L low-RAM kernel
 
 Validated Linux 4.9.337 kernel work for the 2 GB RAM Lenovo Tab M10 HD
-TB-X505L. r7 remains the stable fallback. The permanently tested r8-c3
-pre-release adds Binder caches, compat vDSO32, selectable network/KCAL
-features and measured scheduler, reclaim, compaction and I2C fast paths.
+TB-X505L. r7 remains the stable fallback. The permanently tested r8-c8
+pre-release extends the r8 feature pack with scheduler/KGSL latency work,
+optimized ARM64 paths, optional BFQ and an A53-targeted ThinLTO build.
 
 [Українська версія](README.uk.md) · [Installation](docs/INSTALL.md) · [Build](docs/BUILD.md) · [r8 engineering](docs/R8_ENGINEERING.md) · [Performance dynamics](docs/PERFORMANCE_DYNAMICS.md) · [r7 engineering](docs/R7_ENGINEERING.md) · [Camera HAL logging](docs/CAMERA_HAL_LOGGING.md) · [Archive inventory](docs/ARCHIVE_INVENTORY.md)
 
@@ -38,10 +38,11 @@ The stock Lenovo boot image and proprietary vendor modules are deliberately not 
 
 The release keeps the stock device tree, boot header, command line and empty ramdisk. Only the kernel payload changes.
 
-The r8-c3 pre-release extends r7 without changing those boot-format
-constraints. It passed temporary and permanent boot, boot-partition readback,
-hardware, stress and production-profile validation on the tested tablet. The
-stable quick-start instructions below still retain r7 as the fallback.
+The r8-c8 pre-release extends r7 without changing those boot-format
+constraints. BFQ is available but `deadline` remains the default. The live GPU
+remains at its validated 320 MHz speed-bin level. c8 passed temporary and
+permanent boot, boot-partition readback, hardware, stress and
+production-profile validation on the tested tablet.
 
 ## Why this exists
 
@@ -73,8 +74,8 @@ This is a real security trade-off. Read [SECURITY.md](SECURITY.md) and the kerne
 
 ## Tested result
 
-The final r7 image and the current r8-c3 candidate each completed temporary
-boot before permanent flashing. The following were verified on c3:
+The final r7 image and the current r8-c8 candidate each completed temporary
+boot before permanent flashing. The following were verified on c8:
 
 - all 25 required Lenovo modules loaded;
 - audio card, speakers, Wi-Fi, front/rear cameras, touch and gestures;
@@ -84,11 +85,15 @@ boot before permanent flashing. The following were verified on c3:
 - repeated Android launch and Settings-scroll comparisons;
 - Bluetooth OFF -> ON -> OFF, active accelerometer and two camera devices;
 - repeated camera lifecycles after the PM QoS fix;
-- c3 boot-partition readback exactly matched its published SHA-256;
+- c8 boot-partition readback exactly matched its published SHA-256;
 - the first permanent-boot dmesg fault scan was clean;
 - the Goodix touchscreen uses the changed Qualcomm I2C v2 path and
   `compact_unevictable_allowed=0` is live;
 - the corrected balanced profile applied at the PHH hook and again after boot.
+- BFQ v8r10 is selectable while `deadline` remains selected after boot;
+- ThinLTO/A53 config, the SDM429 KGSL 1000 us active-latency vote and all 25
+  vendor-module symbol requirements passed the final validator;
+- two 256 MiB workers completed 16 memory rounds without an OOM or kernel fault.
 
 The r7 work preserves the complete 4.9.206 -> 4.9.227 -> 4.9.337 integration
 history, module ABI audit, custom subsystem benchmarks, UI controls, a 700 MiB
@@ -98,7 +103,9 @@ limits. r6 and the original r5 qualification remain documented separately.
 
 ## Quick start
 
-1. Download `tb-x505l-lowram-r7-boot.img` and `SHA256SUMS.txt` from the latest stable release, or the explicitly labelled r8-c3 image from its pre-release.
+1. Download `tb-x505l-lowram-r7-boot.img` from the latest stable release, or
+   `tb-x505l-r8-c8-thinlto-boot.img` from the explicitly labelled pre-release,
+   together with `SHA256SUMS.txt`.
 2. Verify the SHA-256 checksum.
 3. Back up your own boot partition.
 4. Test without flashing:
@@ -123,8 +130,8 @@ The tested tablet has a faulty Volume Up button, so all recovery-safe paths use 
 - `configs/` - exact baseline, candidate and final kernel configurations.
 - `benchmarks/` - the native AArch64 CPU/RAM/latency/I/O benchmark source.
 - `analysis/` - generic module ABI and upstream-snapshot investigation tools.
-- `patches/` - validated r5/r6 patch and the independently reviewable r7
-  camera lifecycle fix.
+- `patches/` - validated older deltas plus the ordered, independently
+  reviewable r8 c4-c8 patch series.
 - `device/` - the PHH low-RAM hook and reversible Android 13 runtime profile.
 - `firmware/` - exact factory-package identity and checksum metadata.
 - `historical/` - rejected engineering approaches retained with warnings.
@@ -146,8 +153,9 @@ The original device base is the staged Lenovo tree
 through CAF 4.9.206/4.9.227 into KudProject's Linux 4.9.337 commit
 `cad7430de0364a908d73cea93d06f9ca44ad439e`; the qualified final source commit
 is `ca9f99dcda9bc0cf55271157d3a5718ed8cf6e3b`. r8-c3 ends at
-`45a98eac292f8b1fbf6f8e5b1130805691327e68`; the published c2 and c3 patches
-reconstruct it from that archived r7 source without depending on a moving
+`45a98eac292f8b1fbf6f8e5b1130805691327e68`; r8-c8 ends at
+`40a80480379791338dfacb3d8a2b3d755c655bad`. The published patch series
+reconstructs it from the archived r7/c3 source without depending on a moving
 donor branch.
 
 Related upstream work:

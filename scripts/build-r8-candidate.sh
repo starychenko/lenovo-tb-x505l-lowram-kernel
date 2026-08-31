@@ -19,6 +19,7 @@ config_source="$(realpath "$4")"
 output_dir="$5"
 reproducibility_key="${6:-}"
 arm32_gcc_dir="${7:-}"
+ldgold_override="${TB_X505L_LDGOLD:-}"
 build_timestamp="${TB_X505L_BUILD_TIMESTAMP:-Mon Aug 31 22:30:00 UTC 2026}"
 build_version="${TB_X505L_BUILD_VERSION:-17}"
 build_jobs="${TB_X505L_BUILD_JOBS:-8}"
@@ -49,6 +50,14 @@ if [[ -n "${arm32_gcc_dir}" ]]; then
     arm32_gcc_dir="$(realpath "${arm32_gcc_dir}")"
     if [[ ! -x "${arm32_gcc_dir}/bin/arm-linux-androideabi-gcc" ]]; then
         echo "ARM32 GCC 4.9 toolchain not found in ${arm32_gcc_dir}/bin" >&2
+        exit 1
+    fi
+fi
+
+if [[ -n "${ldgold_override}" ]]; then
+    ldgold_override="$(command -v "${ldgold_override}")"
+    if [[ ! -x "${ldgold_override}" ]]; then
+        echo "Requested GNU gold linker is not executable: ${TB_X505L_LDGOLD}" >&2
         exit 1
     fi
 fi
@@ -121,6 +130,10 @@ echo "Input config:"
 sha256sum "${config_source}"
 echo "Build identity: user=${build_user}, host=${build_host}, version=${build_version}, timestamp=${build_timestamp}"
 echo "Build resources: jobs=${build_jobs}"
+if [[ -n "${ldgold_override}" ]]; then
+    echo "LTO linker: ${ldgold_override}"
+    "${ldgold_override}" --version | head -n 1
+fi
 
 make_args=(
     -C "${kernel_source}"
@@ -138,6 +151,10 @@ if [[ -n "${arm32_gcc_dir}" ]]; then
     make_args+=(
         CROSS_COMPILE_ARM32="${arm32_gcc_dir}/bin/arm-linux-androideabi-"
     )
+fi
+
+if [[ -n "${ldgold_override}" ]]; then
+    make_args+=(LDGOLD="${ldgold_override}")
 fi
 
 build_env=(
