@@ -11,13 +11,13 @@
 ## Перевірка завантаженого файла
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\tb-x505l-lowram-r5-boot.img
+Get-FileHash -Algorithm SHA256 .\tb-x505l-lowram-r6-boot.img
 ```
 
 Очікуваний SHA-256:
 
 ```text
-3dabe282b5f82efa5d4e7496835aca8731d6d1ed3975e281adedeba2fdb3b61f
+9e9bba24ab8af0ca19fc655ded6339a1fd1cfe3f944364aa61a0be2d917b8a72
 ```
 
 Розмір: 67 108 864 байти.
@@ -39,7 +39,7 @@ adb shell "rm -f /data/local/tmp/boot-backup.img"
 
 ```text
 adb reboot bootloader
-fastboot boot tb-x505l-lowram-r5-boot.img
+fastboot boot tb-x505l-lowram-r6-boot.img
 ```
 
 Ця команда нічого не записує. Перевірте тач, жести, Wi-Fi, звук, обидві камери, мікрофон, заряджання та sleep/wake.
@@ -55,7 +55,9 @@ adb shell cat /sys/block/zram0/comp_algorithm
 adb shell cat /sys/kernel/mm/ksm/run
 ```
 
-Має бути kernel `#5`, 25 модулів, аудіокарта `sdm439-snd-card-mtp`, `[lz4]` і KSM `1`.
+Має бути `4.9.205-tbx505l-r6+ #7`, 25 модулів, аудіокарта
+`sdm439-snd-card-mtp`, `[lz4]`, KSM `1` і `[deadline]` у
+`/sys/block/mmcblk0/queue/scheduler`.
 
 ## Постійна прошивка
 
@@ -63,7 +65,7 @@ adb shell cat /sys/kernel/mm/ksm/run
 
 ```text
 adb reboot bootloader
-fastboot flash boot tb-x505l-lowram-r5-boot.img
+fastboot flash boot tb-x505l-lowram-r6-boot.img
 fastboot reboot
 ```
 
@@ -73,6 +75,33 @@ fastboot reboot
 adb root
 adb shell "dd if=/dev/block/by-name/boot bs=1048576 2>/dev/null | sha256sum"
 ```
+
+Результат має починатись із `9e9bba24` і повністю збігатись із SHA-256
+завантаженого r6-образу.
+
+## Додатковий профіль швидкодії Android 13
+
+Перевірений профіль EAS/schedutil не зашитий у boot-образ. Він призначений лише
+для тієї ж crDroid 9.10 Android 13 PHH GSI. Увімкніть root ADB у PHH settings і
+виконайте:
+
+```powershell
+.\device\crdroid13-balanced-profile\install.ps1 `
+  -Adb C:\path\to\adb.exe `
+  -Serial DEVICE_SERIAL
+```
+
+Після перезавантаження перевірте
+`/data/local/tmp/tb-x505l-balanced-profile.log`. Видалення не потребує прошивки
+ядра:
+
+```powershell
+.\device\crdroid13-balanced-profile\uninstall.ps1 `
+  -Adb C:\path\to\adb.exe `
+  -Serial DEVICE_SERIAL
+```
+
+Після видалення перезавантажте планшет, щоб повернути штатні runtime-значення.
 
 ## Відкат
 

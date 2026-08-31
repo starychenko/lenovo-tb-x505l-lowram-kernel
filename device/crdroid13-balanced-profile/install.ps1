@@ -1,0 +1,115 @@
+[CmdletBinding()]
+param(
+    [string]$Adb = 'adb',
+    [string]$Serial,
+    [string]$BackupDirectory = (Join-Path $PSScriptRoot '..\..\backups\crdroid13-balanced-profile')
+)
+
+$ErrorActionPreference = 'Stop'
+$BackupDirectory = [System.IO.Path]::GetFullPath($BackupDirectory)
+
+$adbTarget = @()
+if ($Serial) {
+    $adbTarget = @('-s', $Serial)
+}
+
+function Invoke-Adb {
+    param(
+        [Parameter(Mandatory, Position = 0)]
+        [string[]]$Arguments,
+        [switch]$Capture
+    )
+
+    if ($Capture) {
+        $output = & $Adb @adbTarget @Arguments 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            throw "adb failed: $($Arguments -join ' ')`n$($output -join "`n")"
+        }
+        return ($output -join "`n").Trim()
+    }
+
+    & $Adb @adbTarget @Arguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "adb failed: $($Arguments -join ' ')"
+    }
+}
+
+$profileSource = Join-Path $PSScriptRoot 'tb-x505l-balanced-profile.sh'
+if (-not (Test-Path -LiteralPath $profileSource -PathType Leaf)) {
+    throw "Profile script not found: $profileSource"
+}
+
+$fingerprint = Invoke-Adb -Arguments @('shell', 'getprop', 'ro.vendor.build.fingerprint') -Capture
+if ($fingerprint -notlike 'Lenovo/TB-X505L/*') {
+    throw "Refusing unsupported device: $fingerprint"
+}
+
+$rootIdentity = Invoke-Adb -Arguments @('shell', 'id') -Capture
+if ($rootIdentity -notmatch 'uid=0\(root\)') {
+    Invoke-Adb -Arguments @('root')
+    Invoke-Adb -Arguments @('wait-for-device')
+    $rootIdentity = Invoke-Adb -Arguments @('shell', 'id') -Capture
+    if ($rootIdentity -notmatch 'uid=0\(root\)') {
+        throw 'A root ADB shell is required to modify the PHH GSI overlay.'
+    }
+}
+
+Invoke-Adb -Arguments @('remount')
+
+$mountInfo = Invoke-Adb -Arguments @('shell', 'cat /proc/mounts | grep '' /system '' | head -n 1') -Capture
+if ($mountInfo -notmatch '^overlay\s+/system\s+overlay\s+rw,') {
+    throw "Expected a writable PHH overlay for /system, got:`n$mountInfo"
+}
+
+New-Item -ItemType Directory -Force -Path $BackupDirectory | Out-Null
+$timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+$backupPath = Join-Path $BackupDirectory "phh-on-boot.$timestamp.sh"
+$workingPath = Join-Path ([System.IO.Path]::GetTempPath()) "tb-x505l-phh-on-boot-$timestamp.sh"
+
+try {
+    Invoke-Adb -Arguments @('pull', '/system/bin/phh-on-boot.sh', $backupPath)
+    Copy-Item -LiteralPath $backupPath -Destination $workingPath
+
+    $text = [System.IO.File]::ReadAllText($workingPath)
+    $beginMarker = '# BEGIN TB-X505L r6 balanced profile'
+    if ($text.Contains($beginMarker)) {
+        Write-Host 'Boot hook already present; refreshing only the profile script.'
+    } else {
+        $hook = @'
+
+# BEGIN TB-X505L r6 balanced profile
+if getprop ro.vendor.build.fingerprint | grep -q '^Lenovo/TB-X505L/'; then
+    /system/bin/tb-x505l-balanced-profile.sh apply-late \
+        >/data/local/tmp/tb-x505l-balanced-profile.log 2>&1 &
+fi
+# END TB-X505L r6 balanced profile
+'@
+        $text = $text.TrimEnd("`r", "`n") + "`n" + $hook.TrimStart("`r", "`n")
+        [System.IO.File]::WriteAllText(
+            $workingPath,
+            $text,
+            [System.Text.UTF8Encoding]::new($false)
+        )
+        Invoke-Adb -Arguments @('push', $workingPath, '/system/bin/phh-on-boot.sh')
+    }
+
+    Invoke-Adb -Arguments @('push', $profileSource, '/system/bin/tb-x505l-balanced-profile.sh')
+    Invoke-Adb -Arguments @('shell', 'chmod 0755 /system/bin/phh-on-boot.sh /system/bin/tb-x505l-balanced-profile.sh')
+
+    $hookCheck = Invoke-Adb -Arguments @('shell', "grep -c '^# BEGIN TB-X505L r6 balanced profile$' /system/bin/phh-on-boot.sh") -Capture
+    if ($hookCheck -ne '1') {
+        throw "Boot hook verification failed; marker count is $hookCheck"
+    }
+
+    $remoteProfileHash = Invoke-Adb -Arguments @('shell', 'sha256sum /system/bin/tb-x505l-balanced-profile.sh') -Capture
+    $localProfileHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $profileSource).Hash.ToLowerInvariant()
+    if (($remoteProfileHash -split '\s+')[0] -ne $localProfileHash) {
+        throw 'The pushed profile script does not match the local SHA-256.'
+    }
+
+    Write-Host "Installed. Original hook backup: $backupPath"
+    Write-Host 'The profile activates only on a TB-X505L r6 kernel and only after Android completes boot.'
+    Write-Host 'Reboot, then inspect /data/local/tmp/tb-x505l-balanced-profile.log.'
+} finally {
+    Remove-Item -LiteralPath $workingPath -Force -ErrorAction SilentlyContinue
+}

@@ -1,5 +1,28 @@
 # Changelog
 
+## r6 / v1.1.0 - 2026-08-31
+
+- Qualified the kernel on crDroid 9.10 Android 13 PHH GSI with the same stock
+  Lenovo Android 10 vendor.
+- Added a controlled native AArch64 benchmark for CPU, RAM, wake-up latency and
+  direct sequential/random I/O.
+- Added repeated Android app-launch, Settings-scroll, frame-time, `simpleperf`
+  and telemetry scripts.
+- Compared 100 Hz and 300 Hz candidates; retained 100 Hz after the 300 Hz build
+  repeatedly worsened UI and cross-core latency tails.
+- Built deadline into the final configuration after separate CFQ/deadline
+  comparison and repeated Storage tests.
+- Added an optional, reversible crDroid 13 EAS/schedutil profile with exact
+  device/kernel guards, readback verification, local backup and clean removal.
+- Measured the profile at +1.8% in warm PCMark Work 3.1 and +6.7% in the mean of
+  two PCMark Storage 2.1 runs, with improved typical Settings frame latency.
+- Recorded the cost proxy: about 5.6% more CPU cycles and 9-10% more context
+  switches during the controlled UI workload; unplugged battery life remains a
+  long-term validation item.
+- Temporarily booted and then permanently flashed the final r6 image, verified
+  the boot-partition SHA-256, all 25 modules, core hardware, runtime profile,
+  native/UI smoke tests and a clean kernel fault scan.
+
 ## r5 / v1.0.0 - 2026-08-31
 
 - Published a byte-for-byte reproducible build path with frozen source,

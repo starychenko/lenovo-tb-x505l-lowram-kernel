@@ -29,3 +29,10 @@ adb shell cat /proc/sys/vm/page-cluster
 ```
 
 Expected value: `0`.
+
+## Android 13 balanced profile
+
+`crdroid13-balanced-profile/` contains the measured, reversible EAS/schedutil
+companion profile for the tested crDroid 9.10 PHH GSI. It stays outside the
+kernel because these values are Android runtime policy and may be replaced by
+PowerHAL or init after the kernel boots.

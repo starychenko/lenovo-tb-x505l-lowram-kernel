@@ -1,0 +1,6 @@
+kernel,profile,run,score,web_browsing_3,video_editing_3,writing_3,photo_editing_3,data_manipulation,condition
+r5,rom-default,warm,5242,5580,3964,4728,9851,3841,warm comparison run
+r6-c1,rom-default,warm,5254,5605,3966,4787,9810,3835,warm comparison run
+r6-c2,rom-default,warm,5252,5499,3979,4796,10027,3800,warm comparison run
+r6-c2,balanced-ui,1,5133,5698,4015,4720,9652,3418,first profile run kept as cold-state evidence
+r6-c2,balanced-ui,2,5349,5812,4021,4787,10174,3848,unchanged warm repeat used for comparison

@@ -1,0 +1,11 @@
+kernel,profile,run,score,internal_seq_read_mib_s,internal_random_read_mib_s,internal_seq_write_mib_s,internal_random_write_mib_s,external_seq_read_mib_s,external_random_read_mib_s,external_seq_write_mib_s,external_random_write_mib_s,sqlite_read_iops,sqlite_update_iops,sqlite_insert_iops,sqlite_delete_iops
+r5,rom-default,1,4509,,,,,,,,,,,,
+r5,rom-default,2,4617,273.40,19.96,94.32,6.48,272.22,20.03,98.35,6.36,6417,105,83.05,111
+r6-c1,cfq,1,4185,,,,,,,,,,,,
+r6-c1,cfq,2,4168,,,,,,,,,,,,
+r6-c1,runtime-deadline,1,4282,,,,,,,,,,,,
+r6-c1,runtime-deadline,2,4444,,,,,,,,,,,,
+r6-c2,rom-default,1,4644,274.38,20.62,98.36,6.52,278.39,20.91,99.41,6.65,5958,110,81.99,107
+r6-c2,rom-default,2,4442,273.54,20.33,97.93,6.59,276.47,20.41,98.69,6.57,6355,96,75.57,87
+r6-c2,balanced-ui,1,4906,278.31,20.58,100.34,6.64,272.12,21.37,98.38,6.64,6437,121,96.88,124
+r6-c2,balanced-ui,2,4791,279.92,21.29,98.29,6.69,272.20,20.98,98.95,6.55,6342,108,88.89,122

@@ -1,8 +1,10 @@
 # Low-RAM ядро для Lenovo TB-X505L
 
-Це перевірене ядро Linux 4.9.205 для Lenovo Tab M10 HD TB-X505L з 2 ГБ RAM, Android 11 LineageOS 18.1 PHH GSI та заводським Android 10 vendor.
+Це перевірене ядро Linux 4.9.205 для Lenovo Tab M10 HD TB-X505L з 2 ГБ
+RAM. Поточний r6 перевірено на crDroid 9.10 Android 13 PHH GSI та заводському
+Android 10 vendor.
 
-[Встановлення](docs/INSTALL.uk.md) · [Збірка](docs/BUILD.md) · [Технічний розбір](docs/TECHNICAL_NOTES.md) · [Перевірки](docs/VALIDATION.md)
+[Встановлення](docs/INSTALL.uk.md) · [Збірка](docs/BUILD.md) · [Розробка r6](docs/R6_ENGINEERING.md) · [Перевірки r5](docs/VALIDATION.md)
 
 ## Для якого пристрою
 
@@ -11,7 +13,7 @@
 - Lenovo TB-X505L, 2/32 ГБ;
 - Snapdragon 429 / SDM439;
 - vendor `TB-X505L_S001149_221018_ROW`;
-- LineageOS 18.1 PHH GSI, Android 11;
+- crDroid 9.10 PHH GSI, Android 13;
 - розблокований bootloader.
 
 Не прошивайте цей образ на TB-X505F, TB-X505X або іншу збірку vendor без попереднього `fastboot boot`. Спочатку зробіть власну копію boot-розділу. Заводський boot і пропрієтарні Lenovo-модулі в репозиторії не публікуються.
@@ -27,6 +29,9 @@
 - Виправлено reclaim compound pages у `fs/proc/task_mmu.c`.
 - Збережено точні заводські Lenovo audio/WLAN-модулі та їх ранній порядок завантаження.
 - Обхід CRC обмежено списком із 25 конкретних внутрішніх назв модулів.
+- Після окремого A/B-тесту I/O планувальником за замовчуванням став `deadline`.
+- Є окремий відкатний профіль EAS/schedutil для Android 13; це не прихований
+  незворотний твік усередині ядра.
 
 ## Компроміс безпеки
 
@@ -36,12 +41,14 @@
 
 ## Що перевірено
 
-- Три тимчасові завантаження та одне після постійної прошивки.
+- Тимчасове завантаження фінального r6 та запуск після постійної прошивки.
 - Усі 25 заводських модулів.
 - Звук, Wi-Fi, передня і задня камери, тач, жести й мікрофон.
 - PSI, KSM, LZ4 zRAM, `lmkd`.
-- 700 МБ RAM stress на фінальному r5 без OOM, BUG/Oops або падіння сервісів.
-- Точний SHA-256 записаного boot-розділу після прошивки.
+- Окремі тести CPU, RAM, wake-up latency, direct I/O, запусків програм і
+  621-кадрового скролу Settings.
+- Реальний цикл Bluetooth OFF -> ON -> OFF, акселерометр і дві камери.
+- Точний SHA-256 записаного boot-розділу після прошивки r6.
 
 Мікрофон тестового планшета працює слабко; поведінка однакова на заводському та новому ядрі, тому ймовірна механічна проблема.
 
@@ -51,14 +58,14 @@
 
 ```text
 adb reboot bootloader
-fastboot boot tb-x505l-lowram-r5-boot.img
+fastboot boot tb-x505l-lowram-r6-boot.img
 ```
 
 Після перевірки всього заліза прошити постійно:
 
 ```text
 adb reboot bootloader
-fastboot flash boot tb-x505l-lowram-r5-boot.img
+fastboot flash boot tb-x505l-lowram-r6-boot.img
 fastboot reboot
 ```
 
@@ -68,6 +75,8 @@ fastboot reboot
 
 - точний конфіг;
 - перевірений патч вихідного коду;
+- вихідний код власного AArch64-бенчмарку та Android UI-обгорток;
+- відкатний інсталятор профілю Android 13;
 - скрипти збірки, repack і перевірки;
 - повний технічний опис усіх вдалих і невдалих підходів;
 - `boot.img`, raw `Image`, `System.map`, `Module.symvers`;

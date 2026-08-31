@@ -22,7 +22,7 @@ $magiskBoot = (Resolve-Path -LiteralPath $MagiskBootPath).Path
 $stockBoot = (Resolve-Path -LiteralPath $StockBootImage).Path
 $kernel = (Resolve-Path -LiteralPath $KernelImage).Path
 $output = [IO.Path]::GetFullPath($OutputBootImage)
-$remote = '/data/local/tmp/tb-x505l-r5-repack'
+$remote = '/data/local/tmp/tb-x505l-kernel-repack'
 $createdRemote = $false
 
 if ((Get-Item -LiteralPath $stockBoot).Length -ne 67108864) {

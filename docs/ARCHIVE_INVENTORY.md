@@ -6,10 +6,14 @@ toolchain later disappears.
 
 ## Stored in the Git repository
 
-- exact baseline and r5 kernel configurations;
+- exact baseline, r5 and r6 kernel configurations, including rejected r6
+  candidate configs;
 - the complete five-file r5 source patch;
 - build, repack, temporary-boot, validation and recovery scripts;
-- PHH device-hook patch and reversible LineageOS tuning;
+- PHH device-hook patch, reversible LineageOS tuning and the measured crDroid
+  13 EAS/schedutil profile;
+- native AArch64 benchmark source, Android test wrappers and privacy-reviewed
+  generated r6 result summaries;
 - module ABI-analysis tools used during development;
 - source provenance, failed approaches, security trade-offs and physical test
   boundaries;
@@ -21,10 +25,10 @@ toolchain later disappears.
 - final flashable boot image and raw kernel `Image`;
 - config, `System.map`, `Module.symvers` and generated `compile.h`;
 - exact frozen Lenovo/CAF base source archive;
-- complete corresponding source with r5 already applied;
+- complete corresponding source with the common r5/r6 source patch applied;
 - exact Android Clang r365631c and AArch64 GCC 4.9 build toolchains, including
   their license and notice files;
-- deliberately public r5 reproducibility key and certificate metadata;
+- deliberately public reproducibility key and certificate metadata;
 - a clearly marked archive of non-release engineering kernel outputs and build
   evidence;
 - a convenient public-artifact bundle and SHA-256 manifest.
@@ -53,6 +57,6 @@ Also excluded from public storage:
 - screenshots, photographs and UI hierarchy captures;
 - third-party APKs and Magisk binaries.
 
-These exclusions do not prevent rebuilding r5. Repacking a boot image still
+These exclusions do not prevent rebuilding r5 or r6. Repacking a boot image still
 requires each owner to provide a matching boot image from their own device or
 factory package.

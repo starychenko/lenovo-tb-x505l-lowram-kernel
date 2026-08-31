@@ -1,5 +1,37 @@
 # Reproducing the kernel build
 
+## r6 release build
+
+r6 uses the same patched source commit and public reproducibility key as r5.
+Its final config is `configs/tb-x505l-lowram-r6.config`. The only functional
+kernel-config change from r5 is deadline support/default selection; the local
+version also changes to `-tbx505l-r6`.
+
+```bash
+export TB_X505L_BUILD_TIMESTAMP='Mon Aug 31 11:45:00 UTC 2026'
+export TB_X505L_BUILD_VERSION=7
+
+scripts/build-r6-candidate.sh \
+  /path/to/patched-r5-source \
+  /path/to/clang-r365631c \
+  /path/to/aarch64-linux-android-4.9 \
+  configs/tb-x505l-lowram-r6.config \
+  /fresh/output/r6-final \
+  /path/to/signing_key.pem
+```
+
+Expected release hashes:
+
+```text
+config          055df656f6cbfaf33afa7c61153e537b96d3772181e078ff52c7501b21969353
+Image           974d7ce683b25252743901f618cbb1024a66080ee684ba507dcbac657329f886
+System.map      0d35d8c0ca2f435799f9fdd515df7293b79b9fd8bd788637ec44be7839b3ecda
+Module.symvers  7c74085e951663ba6185e7576a59f62f3faa0157d86d0001aac494d428e2614e
+```
+
+The r5 instructions below remain the source/provenance basis and reproduce the
+original v1.0.0 artifact.
+
 ## Exact inputs
 
 - Either the complete corresponding source archive from the r5 release, or the

@@ -8,13 +8,17 @@ param(
     [Parameter(Mandatory = $true)]
     [string] $BootImage,
 
+    [ValidatePattern('^[0-9a-fA-F]{64}$')]
+    [string] $ExpectedSha256,
+
     [switch] $AllowDifferentHash
 )
 
 $adb = (Resolve-Path -LiteralPath $AdbPath).Path
 $fastboot = (Resolve-Path -LiteralPath $FastbootPath).Path
 $boot = (Resolve-Path -LiteralPath $BootImage).Path
-$expectedHash = '3dabe282b5f82efa5d4e7496835aca8731d6d1ed3975e281adedeba2fdb3b61f'
+$defaultR5Hash = '3dabe282b5f82efa5d4e7496835aca8731d6d1ed3975e281adedeba2fdb3b61f'
+$expectedHash = if ($ExpectedSha256) { $ExpectedSha256.ToLowerInvariant() } else { $defaultR5Hash }
 $actualHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $boot).Hash.ToLowerInvariant()
 
 Write-Output "Boot image SHA-256: $actualHash"
@@ -64,6 +68,11 @@ while ((Get-Date) -lt $deadline) {
         $complete = (& $adb shell getprop sys.boot_completed 2>$null).Trim()
         if ($complete -eq '1') {
             Write-Output 'Android completed boot.'
+            & $adb root | Out-Null
+            if ($LASTEXITCODE -ne 0) {
+                throw 'Android booted, but root ADB could not be enabled for validation.'
+            }
+            & $adb wait-for-device
             & $adb shell uname -a
             & $adb shell 'cat /proc/modules | wc -l'
             & $adb shell cat /proc/asound/cards
