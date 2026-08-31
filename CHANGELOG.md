@@ -1,5 +1,26 @@
 # Changelog
 
+## r8-c3 / v1.3.0-rc2 - 2026-08-31
+
+- Added four independently reviewable fast-path changes: conditional sync-wake
+  affinity, bounded high-order reclaim, disabled unevictable-page compaction by
+  default and block-mode I2C for small Qualcomm transfers.
+- Verified that the changed I2C controller is the live Goodix touchscreen path;
+  no unvalidated GPU frequency table was added.
+- Extended the crDroid/PHH profile to r8, disabled continuous scheduler stats,
+  moved the hook before PHH's cleanup delay and added an early-ready plus
+  post-boot reapply.
+- Added production-mode validation for all runtime policy values and the c3
+  kernel paths while retaining reversible KCAL/network/Bluetooth exercises.
+- Kept `Module.symvers` byte-identical to c2; the 25-module audit has zero CRC
+  drift and zero missing symbols.
+- Completed native/UI tests and a concurrent 512 MiB pressure run. Published
+  improvements and regressions instead of reducing them to one score.
+- Temporarily booted and then permanently flashed c3, verified all core
+  hardware, a clean critical log scan and exact boot-partition SHA-256 readback.
+- Added the exact c3 config, incremental patch, build identity, curated evidence
+  and r5-to-r8 performance-dynamics report.
+
 ## r8-c2 / v1.3.0-rc1 - 2026-08-31
 
 - Added dedicated Binder caches for hot small-object allocations and complete

@@ -1,0 +1,56 @@
+PASS kernel_release               4.9.337-tbx505l-r8-fastpath-c3+
+PASS compact_unevictable          0
+PASS goodix_i2c_path              gt9xx/MSM-I2C-v2
+PASS android_boot_completed       1
+PASS vendor_modules               25 loaded
+PASS audio_card                   sdm439-snd-card-mtp
+PASS wifi_interface               UP
+PASS camera_devices               2
+PASS accelerometer                MC34XX
+PASS kernel_config                CONFIG_COMPAT_VDSO=y
+PASS kernel_config                CONFIG_THUMB2_COMPAT_VDSO=y
+PASS kernel_config                CONFIG_TCP_CONG_BBR=y
+PASS kernel_config                CONFIG_TCP_CONG_WESTWOOD=y
+PASS kernel_config                CONFIG_NET_SCH_FQ_CODEL=y
+PASS kernel_config                CONFIG_NET_SCH_FQ=y
+PASS kernel_config                CONFIG_FB_MSM_MDSS_KCAL_CTRL=y
+PASS kernel_config                CONFIG_ARM_ARCH_TIMER_VCT_ACCESS=y
+PASS congestion_bbr               bbr
+PASS congestion_westwood          westwood
+PASS qdisc_fq                     built-in
+PASS qdisc_fq_codel               built-in
+PASS kcal_kcal                    256 256 256
+PASS kcal_kcal_min                35
+PASS kcal_kcal_enable             0
+PASS kcal_kcal_sat                255
+PASS kcal_kcal_hue                0
+PASS kcal_kcal_val                255
+PASS kcal_kcal_cont               255
+PASS slab_binder_buffer           present
+PASS slab_binder_node             present
+PASS slab_binder_proc             present
+PASS slab_binder_ref              present
+PASS slab_binder_ref_death        present
+PASS slab_binder_thread           present
+PASS slab_binder_transaction      present
+PASS slab_binder_work             present
+INFO vdso32_process              /vendor/bin/hw/android.hardware.cas@1.1-service e7d07000-e7d08000 r-xp 00000000 00:00 0                                  [vdso]
+INFO vdso32_process              /system/bin/drmserver f3947000-f3948000 r-xp 00000000 00:00 0                                  [vdso]
+INFO vdso32_process              /vendor/bin/hw/android.hardware.media.omx@1.0-service e9cc0000-e9cc1000 r-xp 00000000 00:00 0                                  [vdso]
+PASS live_vdso32_processes        10
+PASS profile_top_app_boost        10
+PASS profile_top_app_idle         1
+PASS profile_foreground_boost     5
+PASS profile_foreground_idle      1
+PASS profile_hispeed_freq         1497600
+PASS profile_hispeed_load         75
+PASS profile_up_rate_limit        0
+PASS profile_down_rate_limit      20000
+PASS profile_schedstats           0
+PASS kcal_noop_write              restored
+PASS active_fq_codel_bbr          traffic-ok
+PASS active_fq_westwood           traffic-ok
+PASS active_bluetooth             STATE_ON
+PASS runtime_restore              cubic/mq/bt=0
+PASS critical_kernel_log          clean
+RESULT=PASS

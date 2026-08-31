@@ -40,3 +40,21 @@ reverse against the r8-c2 tree. SHA-256:
 ```text
 b543bd902b5a72308f3300dc762827fad40710c2ab04f32558f36d6f0fa4bb4a
 ```
+
+## r8 c3 fast-path patch
+
+`tb-x505l-r8-fastpath-c3.patch` is the small incremental delta from c2 commit
+`476936bf688557fb6edbe87ef7f0c4acc91592c6` to c3 commit
+`45a98eac292f8b1fbf6f8e5b1130805691327e68`. It changes four files with 32
+insertions and three deletions:
+
+1. keep synchronous wake affinity only when the CPU is about to idle;
+2. avoid excessive high-order reclaim when compaction is suitable;
+3. default unevictable-page compaction to off;
+4. use Qualcomm I2C block mode for small transfers.
+
+It was checked forward against c2 and in reverse against c3. SHA-256:
+
+```text
+93d3de2d1dd607b18d03259235c9ca67f4d21f1f8d9e63a4cb34bd9726be15ef
+```

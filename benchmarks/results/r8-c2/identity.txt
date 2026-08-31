@@ -1,0 +1,15 @@
+captured_utc=2026-08-31T17:56:45.2610255Z
+iterations=2
+cpu_seconds=4
+io_size_mib=64
+io_operations=512
+cooldown_temperature_millic=40000
+wifi_during_test=unchanged
+screen_during_test=unchanged
+binary_sha256=50df394d46672b472024b4b43b4388f85f033249db058f09b38d58b8c280f6ee
+uname=Linux localhost 4.9.337-tbx505l-r8-feature-pack-c2+ #16 SMP PREEMPT Mon Aug 31 19:15:00 UTC 2026 aarch64 Toybox
+fingerprint=google/treble_arm64_bvN/tdgsi_arm64_ab:13/TQ3A.230901.001/1697801378:user/release-keys
+io_scheduler=noop [deadline] cfq
+cpu_governor=schedutil
+cpu_available_frequencies=960000 1305600 1497600 1708800 1958400 2016000
+zram_algorithm=lzo [lz4] deflate

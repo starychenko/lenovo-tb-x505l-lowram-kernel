@@ -1,0 +1,17 @@
+captured_utc=2026-08-31T18:53:33.2100158Z
+iterations=5
+jank_iterations=2
+uname=Linux localhost 4.9.337-tbx505l-r8-fastpath-c3+ #17 SMP PREEMPT Mon Aug 31 22:30:00 UTC 2026 aarch64 Toybox
+fingerprint=google/treble_arm64_bvN/tdgsi_arm64_ab:13/TQ3A.230901.001/1697801378:user/release-keys
+bootimage_fingerprint=Lenovo/TB-X505L/TB-X505L:10/QKQ1.191224.003/X505L_S001149_221018_ROW:user/release-keys
+sched_schedstats=0
+io_scheduler=noop [deadline] cfq
+cpu_governor=schedutil
+top_app_boost=10
+top_app_prefer_idle=1
+foreground_boost=5
+foreground_prefer_idle=1
+schedutil_hispeed_freq=1497600
+schedutil_hispeed_load=75
+schedutil_up_rate_limit_us=0
+schedutil_down_rate_limit_us=20000

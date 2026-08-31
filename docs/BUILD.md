@@ -1,5 +1,40 @@
 # Reproducing the kernel build
 
+## r8-c3 release-candidate build
+
+r8-c3 uses source commit
+`45a98eac292f8b1fbf6f8e5b1130805691327e68`, or the exact r8-c2 source plus
+`patches/tb-x505l-r8-fastpath-c3.patch`.
+
+```bash
+export TB_X505L_BUILD_TIMESTAMP='Mon Aug 31 22:30:00 UTC 2026'
+export TB_X505L_BUILD_VERSION=17
+export TB_X505L_BUILD_USER=codex-r8
+export TB_X505L_BUILD_HOST=tb-x505l
+export TB_X505L_BUILD_JOBS=8
+
+scripts/build-r8-candidate.sh \
+  /path/to/android_kernel_lenovo_4.9.337-r8 \
+  /path/to/clang-r365631c \
+  /path/to/aarch64-linux-android-4.9 \
+  configs/tb-x505l-r8-fastpath-c3.config \
+  /fresh/output/r8-fastpath-c3 \
+  /path/to/signing_key.pem \
+  /path/to/arm-linux-androideabi-4.9
+```
+
+Expected hashes:
+
+```text
+config          a7b9cb80d60cca83306e897647c49571033427c9ced57b36858a6b62ea996005
+Image           42fb77d100dc15958e121bf7c32a1d990919cd9e2286fd4d667045d8e230c5ef
+System.map      ec2dc63dd6b93fd9d76f303ef7ae3715902c728d355ca9028cc8afb48b53e8fb
+Module.symvers  5844ecfc61a6dee4ec2ec2b91659a0625528b0c883fd3f6c0dfdfb5ca8226a0d
+```
+
+The helper defaults now match c3. To reproduce c2, retain the explicit c2
+timestamp and build-version environment values shown below.
+
 ## r8-c2 release-candidate build
 
 r8-c2 uses source commit `476936bf688`, or the exact r7 base

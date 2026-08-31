@@ -1,5 +1,19 @@
 # Source provenance
 
+## r8-c3 source delta
+
+r8-c3 starts at the published c2 commit
+`476936bf688557fb6edbe87ef7f0c4acc91592c6` and ends at
+`45a98eac292f8b1fbf6f8e5b1130805691327e68`.
+
+`patches/tb-x505l-r8-fastpath-c3.patch` is the complete four-file incremental
+delta. Apply it after the c2 patch to reconstruct c3 from the archived r7
+source. Its forward and reverse apply checks passed; the exact config and
+build hashes are recorded in `R8_ENGINEERING.md`.
+
+No firmware, vendor module, APK, device backup, serial/PSN data or private key
+is part of the c3 patch or Git history.
+
 ## r8-c2 source delta
 
 r8-c2 starts from the complete, already archived v1.2.0 source at

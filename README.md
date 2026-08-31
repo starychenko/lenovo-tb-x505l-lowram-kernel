@@ -1,11 +1,11 @@
 # Lenovo TB-X505L low-RAM kernel
 
 Validated Linux 4.9.337 kernel work for the 2 GB RAM Lenovo Tab M10 HD
-TB-X505L. r7 remains the qualified, permanently installed release. The r8-c2
-development candidate adds Binder caches, compat vDSO32, BBR/Westwood,
-FQ/FQ-CoDel and KCAL and has completed temporary-boot qualification.
+TB-X505L. r7 remains the stable fallback. The permanently tested r8-c3
+pre-release adds Binder caches, compat vDSO32, selectable network/KCAL
+features and measured scheduler, reclaim, compaction and I2C fast paths.
 
-[Українська версія](README.uk.md) · [Installation](docs/INSTALL.md) · [Build](docs/BUILD.md) · [r8 engineering](docs/R8_ENGINEERING.md) · [r7 engineering](docs/R7_ENGINEERING.md) · [Camera HAL logging](docs/CAMERA_HAL_LOGGING.md) · [Archive inventory](docs/ARCHIVE_INVENTORY.md)
+[Українська версія](README.uk.md) · [Installation](docs/INSTALL.md) · [Build](docs/BUILD.md) · [r8 engineering](docs/R8_ENGINEERING.md) · [Performance dynamics](docs/PERFORMANCE_DYNAMICS.md) · [r7 engineering](docs/R7_ENGINEERING.md) · [Camera HAL logging](docs/CAMERA_HAL_LOGGING.md) · [Archive inventory](docs/ARCHIVE_INVENTORY.md)
 
 ## Read this first
 
@@ -38,9 +38,10 @@ The stock Lenovo boot image and proprietary vendor modules are deliberately not 
 
 The release keeps the stock device tree, boot header, command line and empty ramdisk. Only the kernel payload changes.
 
-The optional r8-c2 pre-release extends r7 without changing those boot-format
-constraints. It is documented separately because it has only been loaded with
-`fastboot boot`; the stable quick-start instructions below still point to r7.
+The r8-c3 pre-release extends r7 without changing those boot-format
+constraints. It passed temporary and permanent boot, boot-partition readback,
+hardware, stress and production-profile validation on the tested tablet. The
+stable quick-start instructions below still retain r7 as the fallback.
 
 ## Why this exists
 
@@ -72,8 +73,8 @@ This is a real security trade-off. Read [SECURITY.md](SECURITY.md) and the kerne
 
 ## Tested result
 
-The final `r7` image first completed a temporary `fastboot boot` and was then
-flashed permanently. The following were verified:
+The final r7 image and the current r8-c3 candidate each completed temporary
+boot before permanent flashing. The following were verified on c3:
 
 - all 25 required Lenovo modules loaded;
 - audio card, speakers, Wi-Fi, front/rear cameras, touch and gestures;
@@ -83,8 +84,11 @@ flashed permanently. The following were verified:
 - repeated Android launch and Settings-scroll comparisons;
 - Bluetooth OFF -> ON -> OFF, active accelerometer and two camera devices;
 - repeated camera lifecycles after the PM QoS fix;
-- written boot-partition SHA-256 matched the released image exactly;
-- the first permanent-boot dmesg fault scan was clean.
+- c3 boot-partition readback exactly matched its published SHA-256;
+- the first permanent-boot dmesg fault scan was clean;
+- the Goodix touchscreen uses the changed Qualcomm I2C v2 path and
+  `compact_unevictable_allowed=0` is live;
+- the corrected balanced profile applied at the PHH hook and again after boot.
 
 The r7 work preserves the complete 4.9.206 -> 4.9.227 -> 4.9.337 integration
 history, module ABI audit, custom subsystem benchmarks, UI controls, a 700 MiB
@@ -94,7 +98,7 @@ limits. r6 and the original r5 qualification remain documented separately.
 
 ## Quick start
 
-1. Download `tb-x505l-lowram-r7-boot.img` and `SHA256SUMS.txt` from the latest release.
+1. Download `tb-x505l-lowram-r7-boot.img` and `SHA256SUMS.txt` from the latest stable release, or the explicitly labelled r8-c3 image from its pre-release.
 2. Verify the SHA-256 checksum.
 3. Back up your own boot partition.
 4. Test without flashing:
@@ -141,9 +145,10 @@ The original device base is the staged Lenovo tree
 `4e699d80a1f43d3dd380d1c7a50cc8fa0ee30440`. r7 integrates that device line
 through CAF 4.9.206/4.9.227 into KudProject's Linux 4.9.337 commit
 `cad7430de0364a908d73cea93d06f9ca44ad439e`; the qualified final source commit
-is `ca9f99dcda9bc0cf55271157d3a5718ed8cf6e3b`. A base commit alone is not
-sufficient, so the release contains the complete corresponding r7 source
-archive.
+is `ca9f99dcda9bc0cf55271157d3a5718ed8cf6e3b`. r8-c3 ends at
+`45a98eac292f8b1fbf6f8e5b1130805691327e68`; the published c2 and c3 patches
+reconstruct it from that archived r7 source without depending on a moving
+donor branch.
 
 Related upstream work:
 

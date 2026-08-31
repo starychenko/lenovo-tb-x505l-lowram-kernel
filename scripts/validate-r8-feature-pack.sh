@@ -2,14 +2,16 @@
 
 # TB-X505L r8 feature-pack regression test. The default mode is read-only.
 # Pass "active" to exercise reversible KCAL, qdisc, TCP and Bluetooth paths.
+# Pass "production" to run those tests and require the qualified runtime
+# profile to have been applied after boot.
 
 set -u
 
 mode="${1:-read-only}"
 case "$mode" in
-    read-only|active) ;;
+    read-only|active|production) ;;
     *)
-        echo "Usage: $0 [read-only|active]" >&2
+        echo "Usage: $0 [read-only|active|production]" >&2
         exit 2
         ;;
 esac
@@ -35,10 +37,39 @@ expect_word() {
     esac
 }
 
+expect_value() {
+    label="$1"
+    node="$2"
+    expected="$3"
+    if [ ! -r "$node" ]; then
+        fail "$label" "unavailable: $node"
+        return
+    fi
+    actual="$(cat "$node")"
+    if [ "$actual" = "$expected" ]; then
+        pass "$label" "$actual"
+    else
+        fail "$label" "expected=$expected actual=$actual"
+    fi
+}
+
 release="$(uname -r)"
 case "$release" in
     *tbx505l-r8-*) pass kernel_release "$release" ;;
     *) fail kernel_release "$release" ;;
+esac
+
+case "$release" in
+    *tbx505l-r8-fastpath-c3*)
+        expect_value compact_unevictable \
+            /proc/sys/vm/compact_unevictable_allowed 0
+        if [ "$(cat /sys/bus/i2c/devices/3-005d/name 2>/dev/null)" = "gt9xx" ] &&
+           [ "$(cat /sys/class/i2c-adapter/i2c-3/name 2>/dev/null)" = "MSM-I2C-v2-adapter" ]; then
+            pass goodix_i2c_path gt9xx/MSM-I2C-v2
+        else
+            fail goodix_i2c_path unexpected
+        fi
+        ;;
 esac
 
 boot_completed="$(getprop sys.boot_completed)"
@@ -147,7 +178,28 @@ else
     fail live_vdso32_processes 0
 fi
 
-if [ "$mode" = "active" ]; then
+if [ "$mode" = "production" ]; then
+    expect_value profile_top_app_boost \
+        /dev/stune/top-app/schedtune.boost 10
+    expect_value profile_top_app_idle \
+        /dev/stune/top-app/schedtune.prefer_idle 1
+    expect_value profile_foreground_boost \
+        /dev/stune/foreground/schedtune.boost 5
+    expect_value profile_foreground_idle \
+        /dev/stune/foreground/schedtune.prefer_idle 1
+    expect_value profile_hispeed_freq \
+        /sys/devices/system/cpu/cpufreq/policy0/schedutil/hispeed_freq 1497600
+    expect_value profile_hispeed_load \
+        /sys/devices/system/cpu/cpufreq/policy0/schedutil/hispeed_load 75
+    expect_value profile_up_rate_limit \
+        /sys/devices/system/cpu/cpufreq/policy0/schedutil/up_rate_limit_us 0
+    expect_value profile_down_rate_limit \
+        /sys/devices/system/cpu/cpufreq/policy0/schedutil/down_rate_limit_us 20000
+    expect_value profile_schedstats \
+        /proc/sys/kernel/sched_schedstats 0
+fi
+
+if [ "$mode" != "read-only" ]; then
     old_tcp="$(cat /proc/sys/net/ipv4/tcp_congestion_control)"
     old_root_qdisc="$(tc qdisc show dev wlan0 2>/dev/null | awk 'NR == 1 { print $2 }')"
     old_bluetooth="$(settings get global bluetooth_on)"

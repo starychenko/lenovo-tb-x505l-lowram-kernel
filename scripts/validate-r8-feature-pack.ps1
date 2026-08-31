@@ -4,7 +4,9 @@ param(
 
     [string] $OutputPath,
 
-    [switch] $ActiveTests
+    [switch] $ActiveTests,
+
+    [switch] $ProductionProfile
 )
 
 $ErrorActionPreference = 'Stop'
@@ -36,7 +38,7 @@ if ($LASTEXITCODE -ne 0) {
 & $adb wait-for-device | Out-Null
 
 $remoteValidator = '/data/local/tmp/tb-x505l-validate-r8-feature-pack.sh'
-$mode = if ($ActiveTests) { 'active' } else { 'read-only' }
+$mode = if ($ProductionProfile) { 'production' } elseif ($ActiveTests) { 'active' } else { 'read-only' }
 $lines = @()
 $remoteCreated = $false
 

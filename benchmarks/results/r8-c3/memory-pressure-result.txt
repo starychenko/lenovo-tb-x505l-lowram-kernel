@@ -1,0 +1,7 @@
+per_worker_mib=256
+workers=2
+total_working_set_mib=512
+rounds=16
+status=0
+test=memory size_mib=256 rounds=16 copy_mib_s=1084.124 read_mib_s=2161.225 write_mib_s=2990.442 checksum=3132431605398885392
+test=memory size_mib=256 rounds=16 copy_mib_s=1040.130 read_mib_s=2107.235 write_mib_s=2967.916 checksum=3132431605398885392

@@ -21,3 +21,8 @@ and wrappers required to reproduce the project-authored tests are published.
 `r8-c2/` contains the privacy-reviewed runtime, native, UI and 512 MiB pressure
 smoke evidence for the temporary-booted r8 feature pack. It is regression
 evidence only; it is not presented as a matched r7/r8 performance comparison.
+
+`r8-c3/` contains the c3 native, production UI, pressure and permanent-runtime
+validation summaries. `r8-c2-vs-c3-summary.csv` is the two-repetition native
+comparison. Small deltas and the variable eMMC results are not treated as
+conclusive; see `docs/R8_ENGINEERING.md` and `docs/PERFORMANCE_DYNAMICS.md`.

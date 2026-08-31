@@ -71,34 +71,40 @@ try {
     Copy-Item -LiteralPath $backupPath -Destination $workingPath
 
     $text = [System.IO.File]::ReadAllText($workingPath)
+    $originalText = $text
     $legacyBeginMarker = '# BEGIN TB-X505L r6 balanced profile'
     $legacyEndMarker = '# END TB-X505L r6 balanced profile'
     $beginMarker = '# BEGIN TB-X505L balanced profile'
     $endMarker = '# END TB-X505L balanced profile'
-    $hookChanged = $false
-
     if ($text.Contains($legacyBeginMarker)) {
         $text = $text.Replace($legacyBeginMarker, $beginMarker).Replace($legacyEndMarker, $endMarker)
-        $hookChanged = $true
         Write-Host 'Migrating the legacy r6 marker to the release-neutral marker.'
     }
 
-    if ($text.Contains($beginMarker)) {
-        Write-Host 'Boot hook already present; refreshing only the profile script.'
-    } else {
-        $hook = @'
+    $blockPattern = '(?ms)^# BEGIN TB-X505L balanced profile\r?\n.*?^# END TB-X505L balanced profile\r?\n?'
+    if ([regex]::IsMatch($text, $blockPattern)) {
+        $text = [regex]::Replace($text, $blockPattern, '')
+        Write-Host 'Refreshing and repositioning the existing boot hook.'
+    }
 
+    $hook = @'
 # BEGIN TB-X505L balanced profile
 if getprop ro.vendor.build.fingerprint | grep -q '^Lenovo/TB-X505L/'; then
-    /system/bin/tb-x505l-balanced-profile.sh apply-late \
+    /system/bin/tb-x505l-balanced-profile.sh apply-staged \
         >/data/local/tmp/tb-x505l-balanced-profile.log 2>&1 &
 fi
 # END TB-X505L balanced profile
 '@
-        $text = $text.TrimEnd("`r", "`n") + "`n" + $hook.TrimStart("`r", "`n")
-        $hookChanged = $true
+
+    $anchor = '#Clear looping services'
+    $anchorIndex = $text.IndexOf($anchor, [StringComparison]::Ordinal)
+    if ($anchorIndex -ge 0) {
+        $text = $text.Insert($anchorIndex, $hook.Trim() + "`n")
+    } else {
+        $text = $text.TrimEnd("`r", "`n") + "`n" + $hook.Trim() + "`n"
     }
 
+    $hookChanged = $text -ne $originalText
     if ($hookChanged) {
         [System.IO.File]::WriteAllText(
             $workingPath,
@@ -116,6 +122,17 @@ fi
         throw "Boot hook verification failed; marker count is $hookCheck"
     }
 
+    $stagedHookCheck = Invoke-Adb -Arguments @('shell', "grep -c 'tb-x505l-balanced-profile.sh apply-staged' /system/bin/phh-on-boot.sh") -Capture
+    if ($stagedHookCheck -ne '1') {
+        throw "Staged boot-hook verification failed; match count is $stagedHookCheck"
+    }
+
+    $hookLine = [int](Invoke-Adb -Arguments @('shell', "grep -n '^# BEGIN TB-X505L balanced profile$' /system/bin/phh-on-boot.sh | cut -d: -f1") -Capture)
+    $cleanupLine = [int](Invoke-Adb -Arguments @('shell', "grep -n '^#Clear looping services$' /system/bin/phh-on-boot.sh | cut -d: -f1") -Capture)
+    if ($cleanupLine -gt 0 -and $hookLine -ge $cleanupLine) {
+        throw "Boot hook is still after the PHH cleanup delay: hook=$hookLine cleanup=$cleanupLine"
+    }
+
     $legacyHookCheck = Invoke-Adb -Arguments @('shell', "grep -c '^# BEGIN TB-X505L r6 balanced profile$' /system/bin/phh-on-boot.sh || true") -Capture
     if ($legacyHookCheck -ne '0') {
         throw "Legacy boot hook migration failed; marker count is $legacyHookCheck"
@@ -128,12 +145,13 @@ fi
     }
 
     # A previous boot's log can otherwise be mistaken for the new asynchronous
-    # apply-late result immediately after reboot.
+    # staged result immediately after reboot.
     Invoke-Adb -Arguments @('shell', 'rm -f /data/local/tmp/tb-x505l-balanced-profile.log')
 
     Write-Host "Installed. Original hook backup: $backupPath"
-    Write-Host 'The profile activates only on a qualified TB-X505L r6/r7 kernel and only after Android completes boot.'
-    Write-Host 'Reboot, then wait for status=applied in /data/local/tmp/tb-x505l-balanced-profile.log.'
+    Write-Host 'The profile activates only on a qualified TB-X505L r6/r7/r8 kernel.'
+    Write-Host 'It applies when all nodes appear and again after Android completes boot.'
+    Write-Host 'Reboot, then wait for stage=post-boot in /data/local/tmp/tb-x505l-balanced-profile.log.'
 } finally {
     Remove-Item -LiteralPath $workingPath -Force -ErrorAction SilentlyContinue
 }

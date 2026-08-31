@@ -1,0 +1,80 @@
+diff --git a/drivers/i2c/busses/i2c-msm-v2.c b/drivers/i2c/busses/i2c-msm-v2.c
+index ad999a27c92ac139fd4c7c2aeed226281f1482df..45826cd244ed740989b1bafdd0a45b6fb335ad7e 100644
+--- a/drivers/i2c/busses/i2c-msm-v2.c
++++ b/drivers/i2c/busses/i2c-msm-v2.c
+@@ -2039,7 +2039,7 @@ i2c_msm_qup_choose_mode(struct i2c_msm_ctrl *ctrl)
+ 		(tx_cnt_sum < fifo->output_fifo_sz)))
+ 		return I2C_MSM_XFER_MODE_FIFO;
+ 
+-	if (ctrl->rsrcs.disable_dma)
++	if (ctrl->rsrcs.disable_dma || (rx_cnt_sum < 96 && tx_cnt_sum < 96))
+ 		return I2C_MSM_XFER_MODE_BLOCK;
+ 
+ 	return I2C_MSM_XFER_MODE_DMA;
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 3f89a105a21a74e4299795fffeeb363b73759a0e..e7d35ae929050b559fa41366776272c97829597e 100755
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -7738,8 +7738,18 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
+ 	int sync = wake_flags & WF_SYNC;
+ 
+ 	if (sd_flag & SD_BALANCE_WAKE) {
++		int _wake_cap = wake_cap(p, cpu, prev_cpu);
++
++		if (cpumask_test_cpu(cpu, tsk_cpus_allowed(p))) {
++			bool about_to_idle = (cpu_rq(cpu)->nr_running < 2);
++
++			if (sysctl_sched_sync_hint_enable && sync &&
++			    !_wake_cap && about_to_idle)
++				return cpu;
++		}
++
+ 		record_wakee(p);
+-		want_affine = (!wake_wide(p) && !wake_cap(p, cpu, prev_cpu) &&
++		want_affine = (!wake_wide(p) && !_wake_cap &&
+ 			cpumask_test_cpu(cpu, tsk_cpus_allowed(p)));
+ 	}
+ 
+diff --git a/mm/compaction.c b/mm/compaction.c
+index 6a4c4eb210883ee3918b5ca0f1ec0fc1ace67e93..f09cf560b7ab89c0bb3fb77abd59063dcc774f5a 100644
+--- a/mm/compaction.c
++++ b/mm/compaction.c
+@@ -1205,7 +1205,7 @@ typedef enum {
+  * Allow userspace to control policy on scanning the unevictable LRU for
+  * compactable pages.
+  */
+-int sysctl_compact_unevictable_allowed __read_mostly = 1;
++int sysctl_compact_unevictable_allowed __read_mostly = 0;
+ 
+ /*
+  * Isolate all pages that can be migrated from the first suitable block,
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index b3c44fc17861afdf6767d6fe3beaa1034953c1f1..ff7075627deee3913d0901d016069c6ebd313673 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -3259,6 +3259,25 @@ static bool kswapd_shrink_node(pg_data_t *pgdat,
+ 	struct zone *zone;
+ 	int z;
+ 
++	if (sc->order) {
++		int ret;
++
++		for (z = 0; z <= sc->reclaim_idx; z++) {
++			zone = pgdat->node_zones + z;
++			if (!managed_zone(zone))
++				continue;
++			ret = compaction_suitable(zone, sc->order, 0,
++						sc->reclaim_idx);
++			if (ret != COMPACT_SUCCESS && ret != COMPACT_CONTINUE)
++				goto reclaim;
++		}
++
++		sc->order = 0;
++		sc->nr_reclaimed = SWAP_CLUSTER_MAX;
++		return true;
++	}
++
++reclaim:
+ 	/* Reclaim a number of pages proportional to the number of zones */
+ 	sc->nr_to_reclaim = 0;
+ 	for (z = 0; z <= sc->reclaim_idx; z++) {

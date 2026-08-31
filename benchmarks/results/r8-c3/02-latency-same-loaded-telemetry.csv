@@ -1,0 +1,2 @@
+monotonic_s,cpu0_khz,cpu1_khz,cpu2_khz,cpu3_khz,gpu_hz,thermal_max_millic,battery_current_ua,mem_available_kib,swap_free_kib,psi_memory_some_avg10,context_switches,pgmajfault,pswpin,pswpout
+225.25,1497600,2016000,2016000,2016000,320000000,41000,349884,893980,967844,0.00,831918,14937,9697,22132

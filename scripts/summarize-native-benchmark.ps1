@@ -40,7 +40,7 @@ foreach ($directoryName in $InputDirectory) {
         throw "Missing native-results.txt in $directory"
     }
 
-    $config = Split-Path -Leaf (Split-Path -Parent $directory)
+    $config = Split-Path -Leaf $directory
     $kernel = ''
     if (Test-Path -LiteralPath $identityPath -PathType Leaf) {
         $uname = Get-Content -LiteralPath $identityPath | Where-Object { $_ -like 'uname=*' } | Select-Object -First 1
@@ -134,7 +134,7 @@ foreach ($group in ($rows | Group-Object Config, Test, Metric)) {
     })
 }
 
-$baselineConfig = Split-Path -Leaf (Split-Path -Parent (Resolve-Path -LiteralPath $InputDirectory[0]).Path)
+$baselineConfig = Split-Path -Leaf (Resolve-Path -LiteralPath $InputDirectory[0]).Path
 $baseline = @{}
 foreach ($summary in ($summaries | Where-Object Config -eq $baselineConfig)) {
     $baseline["$($summary.Test)|$($summary.Metric)"] = $summary.Median

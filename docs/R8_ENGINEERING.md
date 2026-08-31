@@ -1,101 +1,124 @@
-# r8 engineering: first integrated feature pack
+# r8 engineering: feature pack and fast-path candidate
 
-## Status and scope
+## Current status
 
-r8-c2 is the first development candidate built on the qualified r7 Linux
-4.9.337 base. It deliberately groups several independent, low-risk features
-into one build-and-test cycle while keeping each source change as a separate
-Git commit.
+`r8-fastpath-c3` is the current qualified r8 candidate for the tested Lenovo
+TB-X505L 2/32 GB. It extends the r8-c2 feature pack with four small scheduler,
+memory-management and I2C changes. c3 completed temporary boot, stress,
+production-profile and hardware qualification, was then flashed permanently,
+and its boot-partition readback matched the tested image byte for byte.
 
-The candidate was loaded with `fastboot boot`; it has not replaced the
-permanently installed r7 image. A normal reboot still returns the tested tablet
-to r7. This is an engineering release candidate, not a claim that every future
-r8 change should be enabled by default.
+It remains a pre-release because the project has only one physical test unit
+and no long-duration unplugged battery or multi-device sample. The stable
+fallback remains r7/v1.2.0.
 
 Source identity:
 
 ```text
 r7 base       ca9f99dcda9bc0cf55271157d3a5718ed8cf6e3b
-r8-c2 head    476936bf688
-config        d0d68d6d28e3733840d55a452d76654b6b007cbb46793c35369015278e70cf90
-source patch  b543bd902b5a72308f3300dc762827fad40710c2ab04f32558f36d6f0fa4bb4a
+r8-c2 head    476936bf688557fb6edbe87ef7f0c4acc91592c6
+r8-c3 head    45a98eac292f8b1fbf6f8e5b1130805691327e68
+c2 patch      b543bd902b5a72308f3300dc762827fad40710c2ab04f32558f36d6f0fa4bb4a
+c3 patch      93d3de2d1dd607b18d03259235c9ca67f4d21f1f8d9e63a4cb34bd9726be15ef
 ```
 
-The consolidated patch applies forward to the exact r7 base and in reverse to
-the r8-c2 head. It contains 40 changed files, 2,394 insertions and 513
-deletions. The full commit history remains in the development source checkout.
+The c2 patch reconstructs the feature pack from the exact r7 base. The c3
+patch then applies four files, 32 insertions and three deletions on top of c2.
+Both deltas were checked in the forward and reverse directions.
 
-## What is in c2
+## What c2 introduced
 
 ### Binder allocation caches
 
-Frequently allocated Binder objects now use dedicated slab caches:
-
-- buffer metadata;
-- node;
-- process;
-- reference and death notification;
-- thread;
-- transaction;
-- work item.
-
-The implementation was adapted from the compatible SDM439 donor tree and adds
-complete reverse-order cleanup if any cache or shrinker initialization step
-fails. On the live tablet all eight logical Binder caches were present, and the
-kernel recorded more than 100,000 Binder transactions during qualification.
-SLUB may merge caches with identical layouts; that is expected and does not
-disable the logical cache API.
+Frequently allocated Binder objects use dedicated slab caches for buffer
+metadata, nodes, processes, references, death notifications, threads,
+transactions and work items. Initialization has complete reverse-order cleanup
+on failure. All eight logical caches were present on the live tablet.
 
 ### AArch32 compat vDSO
 
-r8 backports the complete arm64 compat-vDSO dependency series rather than only
-turning on a Kconfig symbol. The build uses a separate ARM32 GCC 4.9 toolchain
-and produces an ELF32 ARM EABI5 shared object containing:
+r8 backports the complete arm64 compat-vDSO dependency series and builds its
+32-bit object with a separate ARM32 GCC 4.9 toolchain. Ten live 32-bit Android
+and vendor processes had a mapped `[vdso]` during validation. The image exports
+the compat clock/gettimeofday entry points rather than forcing every call
+through the kernel syscall path.
+
+### Network and display controls
+
+BBR, Westwood, FQ and FQ-CoDel are built in and selectable. Both FQ-CoDel +
+BBR and FQ + Westwood carried real traffic in the reversible validator. The
+existing `cubic`, multiqueue and `pfifo_fast` defaults are retained because a
+smoke test is not proof that another policy is universally better for this
+Wi-Fi driver.
+
+KCAL is integrated into the MDSS MDP v1.7 path. RGB, minimum RGB, saturation,
+hue, value, contrast and enable state were read and exercised with safe no-op
+writes. No color calibration is silently imposed.
+
+## What c3 adds
+
+### Scheduler sync-wake placement
+
+The scheduler now keeps a synchronous wake-up on the waker CPU only when that
+CPU is allowed, has enough capacity and is about to become idle. This avoids
+blindly stacking a wakee on an already busy CPU while preserving the cheap
+same-CPU path when it is actually useful.
+
+### Bounded high-order reclaim
+
+When compaction can already satisfy a high-order allocation, `kswapd` no
+longer continues reclaiming ordinary pages only to meet the original
+high-order target. The intent is to reduce unnecessary reclaim and cache loss
+on a 2 GB device.
+
+### Unevictable-page compaction default
+
+`vm.compact_unevictable_allowed` now defaults to `0`. Compaction therefore
+does not scan mlocked/unevictable pages unless userspace explicitly opts in.
+The production validator confirms the live value.
+
+### Small I2C transfer path
+
+Qualcomm I2C v2 uses block mode for transfers below 96 bytes instead of paying
+DMA setup overhead. The live Goodix touchscreen is on this exact
+`gt9xx`/`MSM-I2C-v2` path. The donor commit estimates a 0.5-1 ms reduction for
+small touch transactions; this project verified the hardware path and touch
+operation, not that sub-millisecond number with an external latency rig.
+
+The four changes are kernel-native and active from kernel boot. They are not
+Android init scripts.
+
+## Android runtime policy
+
+The separate crDroid/PHH balanced profile controls Android-owned scheduler and
+`schedutil` nodes. Those nodes are created or rewritten by Android init and
+PowerHAL, so baking the same values into an early kernel default would not make
+the final policy deterministic.
+
+The installer now positions its hook before PHH's unrelated 30-second cleanup
+delay. The hook applies when every policy node is writable and reapplies five
+seconds after `sys.boot_completed`. This is PHH's boot-hook mechanism - similar
+in purpose to `init.d`, but it is not classic `init.d` and it does not run in
+the first seconds of kernel startup.
+
+The profile also restores `kernel.sched_schedstats=0` after Android's
+`atrace.rc` enables continuous scheduler accounting. A live c2 A/B check found
+roughly 7-9% lower cross-core mean wake latency and about 2% lower loaded p95,
+without a measurable one-thread throughput loss. Compiling scheduler stats out
+was rejected because it changed hundreds of exported CRCs; the runtime switch
+keeps the vendor-module ABI unchanged and remains reversible.
+
+Production values:
 
 ```text
-__vdso_clock_gettime
-__vdso_gettimeofday
-__vdso_clock_getres
+top-app boost / prefer_idle       10 / 1
+foreground boost / prefer_idle     5 / 1
+schedutil hispeed_freq / load       1497600 / 75
+schedutil up/down rate limit us      0 / 20000
+kernel.sched_schedstats              0
 ```
 
-The live check found ten 32-bit Android/vendor processes with a mapped
-`[vdso]`, including the camera provider, DRM server, OMX service and
-`app_process32`. `CONFIG_ARM_ARCH_TIMER_VCT_ACCESS=y` permits the fast timer
-path for compatible AArch32 applications.
-
-### Network queueing and congestion control
-
-The candidate builds in:
-
-```text
-CONFIG_TCP_CONG_BBR=y
-CONFIG_TCP_CONG_WESTWOOD=y
-CONFIG_NET_SCH_FQ=y
-CONFIG_NET_SCH_FQ_CODEL=y
-```
-
-Both combinations were exercised on the live Wi-Fi interface:
-
-- FQ-CoDel + BBR;
-- FQ + Westwood.
-
-Each accepted real Internet traffic with zero packet loss in the short smoke
-test. The validator then restored the original `cubic`, `mq` and
-`pfifo_fast` state. r8-c2 does not silently change the device's default qdisc
-or TCP algorithm: a loaded feature is not yet evidence that it is the best
-default for this multiqueue Wi-Fi driver.
-
-### KCAL display controls
-
-KCAL is built into the MDSS MDP v1.7 display path. The live sysfs interface
-exposes RGB, minimum RGB, saturation, hue, value, contrast and enable state.
-Qualification read every attribute and performed no-op writes to all safely
-writable values; the values were read back unchanged.
-
-KCAL is a control interface, not an automatic color profile. The release does
-not alter the owner's current display calibration.
-
-## GPU speed-bin finding
+## GPU speed-bin result
 
 No GPU overclock is included. The live device tree contains higher Adreno 504
 levels for other silicon bins, but the tested tablet's QFPROM values decode to
@@ -108,113 +131,147 @@ speed bin      = 10
 validated GPU  = 320 MHz
 ```
 
-For this bin the stock DT exposes only 320 MHz plus the XO level. The 400, 510,
-560 and 650 MHz tables belong to other bins. A future 400 MHz experiment must
-therefore be an explicitly labelled overclock candidate with thermal, GPU and
-long-duration stability tests; it must not become the default r8 profile.
+The 400, 510, 560 and 650 MHz tables belong to other bins. A 400 MHz build
+would be an explicit overclock experiment requiring thermal and long-duration
+3D validation, not a safe default.
 
-## Build identity
+## c3 build identity
 
 ```text
-Linux localhost 4.9.337-tbx505l-r8-feature-pack-c2+ #16 SMP PREEMPT
-Mon Aug 31 19:15:00 UTC 2026 aarch64
+Linux localhost 4.9.337-tbx505l-r8-fastpath-c3+ #17 SMP PREEMPT
+Mon Aug 31 22:30:00 UTC 2026 aarch64
 ```
 
 ```text
-boot.img       d7df0e2c509802120118f3995938fb5e578cd454405d32a945d86367469c45ad
-Image          60ea8530b56aee8bb64fe0b35a7d6942adf70d72670da824fceed59359e3e88b
-config         d0d68d6d28e3733840d55a452d76654b6b007cbb46793c35369015278e70cf90
-System.map     6e7ff57fdfa969b2b10ade133b2fad093e9811626094e229b804b8e7d63e0b10
+boot.img       55ecbf9981f1c6cb0327053274654d33ca7e1a4e6f2b9cdf84648e7e0ce0d76c
+Image          42fb77d100dc15958e121bf7c32a1d990919cd9e2286fd4d667045d8e230c5ef
+config         a7b9cb80d60cca83306e897647c49571033427c9ced57b36858a6b62ea996005
+System.map     ec2dc63dd6b93fd9d76f303ef7ae3715902c728d355ca9028cc8afb48b53e8fb
 Module.symvers 5844ecfc61a6dee4ec2ec2b91659a0625528b0c883fd3f6c0dfdfb5ca8226a0d
 ```
 
-The raw `Image` hash remained identical after the vDSO warning-probe and KCAL
-whitespace cleanups were committed and the affected objects were rebuilt with
-the same pinned build identity. The boot image preserves the r7/Lenovo header,
-command line, empty Android ramdisk and stock DTB; only the kernel payload is
-replaced.
+The c3 config differs from c2 only by `CONFIG_LOCALVERSION`. Its
+`Module.symvers` is byte-identical to c2. The full shipping-module audit covers
+25 modules, 2,004 required-symbol rows and 980 unique symbols with zero missing
+symbols and zero CRC drift.
 
-Toolchains:
+The boot image retains the tested Lenovo header, command line, empty Android
+ramdisk and stock DTB; only the kernel payload changes.
 
-```text
-Clang        Android r365631c, 9.0.8
-AArch64 GCC Android 4.9
-ARM32 GCC   Android 4.9 pie-release, commit cb7b3ac
-```
+## Qualification result
 
-The public r8 helper requires the ARM32 toolchain whenever
-`CONFIG_COMPAT_VDSO=y`; it refuses to continue if that input is missing.
-
-## Automated runtime qualification
-
-`scripts/validate-r8-feature-pack.ps1 -ActiveTests` now automates the complete
-feature-pack regression pass. It preserves and restores the initial TCP,
-qdisc and Bluetooth state even when a test fails.
-
-The final run passed every check:
+The final production run passed:
 
 | Area | Result |
 |---|---|
-| Android boot | complete |
+| Android boot | complete after cold and permanent boot |
+| Permanent image | boot-partition readback equals c3 SHA-256 |
 | Lenovo vendor modules | 25/25 loaded |
-| Audio | `sdm439-snd-card-mtp` present |
-| Wi-Fi | interface up and real traffic passed |
-| Cameras | two devices reported |
-| Accelerometer | MC34XX present and active |
-| Bluetooth | OFF -> ON -> OFF completed |
+| Audio / Wi-Fi | card present / interface up and real traffic |
+| Camera / sensor | two cameras and active MC34XX accelerometer |
+| Bluetooth | OFF -> ON -> restored OFF |
 | compat vDSO | 10 live 32-bit mappings |
-| Binder | all 8 logical caches present |
-| KCAL | nodes present; safe no-op writes restored |
-| FQ/FQ-CoDel | both attached successfully |
-| BBR/Westwood | both selected and carried traffic |
+| Binder / KCAL | all logical caches and every expected node present |
+| Network options | FQ/FQ-CoDel and BBR/Westwood exercised |
+| c3 paths | compact default and Goodix I2C path verified |
+| Runtime profile | all nine values read back after post-boot pass |
 | Kernel fault scan | clean |
 
-The privacy-reviewed output is stored in
-`benchmarks/results/r8-c2/runtime-validation.txt`.
+Two simultaneous 256 MiB memory workers completed 16 rounds each without an
+OOM kill, panic or hung task. Curated evidence is in
+`benchmarks/results/r8-c3/`.
 
-## Controlled stress and UI smoke tests
+## c2 to c3 measurements
 
-Two simultaneous 256 MiB memory workers completed 16 rounds each. The minimum
-sampled `MemAvailable` was 31,472 KiB, PSI pressure became visible, and memory
-recovered after the workers exited. There was no OOM kill, kernel fault or
-vendor-module loss.
+The native harness used two repetitions per candidate. That is enough to catch
+large regressions, not enough to turn small differences into universal claims.
 
-The native smoke test completed two repetitions of single-thread CPU,
-four-thread CPU, 64 MiB memory, same/cross-core wake-up latency and 64 MiB
-direct sequential/random I/O. It is regression evidence, not a performance
-comparison with r7 because no matched r7 control was run in this cycle.
-
-Five cold-process launches per application produced these medians:
-
-| App | Median |
+| Native metric | c3 vs c2 median |
 |---|---:|
-| NewPipe | 1,446 ms |
-| Cromite | 805 ms |
+| CPU, 1 thread | +0.03% |
+| CPU, 4 threads | +0.43% |
+| memory copy / read / write | +0.79% / +2.63% / +0.39% |
+| loaded cross-core wake mean | -21.82% latency |
+| loaded cross-core wake p95 | -3.14% latency |
+| loaded cross-core wake p99 | -63.17% latency |
+| sequential read / write | +0.38% / -4.19% |
+| random read / write IOPS | -1.30% / -14.82% |
 
-Two Settings scroll samples produced 0.16% median jank over 620 median frames.
-The curated raw summaries are in `benchmarks/results/r8-c2/`.
+Idle and same-core wake tails were mixed, and the eMMC write results were
+highly variable. c3 contains no block-I/O change, so the two-run random-write
+drop is retained as regression evidence but is not attributed to the four c3
+commits.
+
+The existing UI runs show the complete production-stack result, not a pure
+kernel-only A/B: the old c2 profile guard silently skipped r8, while the c3 run
+used the corrected balanced profile and `sched_schedstats=0`.
+
+| UI metric | c2 | c3 production | Change |
+|---|---:|---:|---:|
+| NewPipe median | 1,446 ms | 1,480 ms | +2.35% |
+| NewPipe p90 | 1,995 ms | 1,742 ms | -12.68% |
+| NewPipe mean | 1,562.2 ms | 1,529.2 ms | -2.11% |
+| Cromite median | 805 ms | 792 ms | -1.61% |
+| Cromite p90 | 853 ms | 795 ms | -6.80% |
+| Cromite mean | 815.2 ms | 765.6 ms | -6.08% |
+| Settings p50 / p90 | 11 / 13 ms | 10 / 13 ms | -9.1% / same |
+| Settings p95 / p99 | 25 / 28 ms | 16 / 18 ms | -36.0% / -35.7% |
+| Settings jank | 0.16% | 0.16% | same |
+
+The longer r5 -> r8 performance history is summarized in
+[PERFORMANCE_DYNAMICS.md](PERFORMANCE_DYNAMICS.md). There is deliberately no
+single "overall gain" percentage: CPU throughput, storage, frame tails,
+memory-pressure behavior and optional features are different dimensions.
+
+## Evaluated but not shipped
+
+- GPU overclocking was rejected for the live speed bin.
+- Compile-time removal of scheduler statistics was rejected because of broad
+  vendor-module CRC drift; the reversible runtime switch gives the useful
+  part without changing the ABI.
+- Config-only image trimming did not reduce the fixed boot payload enough to
+  justify losing diagnostics.
+- Scheduler donor changes with mixed measurements, wrong prerequisites or
+  misleading commit labels were excluded instead of being accumulated for a
+  larger feature count.
+- ThinLTO, a wholesale scheduler replacement and major CPU/GPU frequency-table
+  changes remain isolated high-risk experiments, not c3 defaults.
+
+## Development roadmap
+
+The next useful work is ordered by expected value, not by patch count:
+
+1. **Soak and power evidence.** Several days of normal child-use, suspend/
+   resume, Wi-Fi/video and unplugged battery measurements. This decides whether
+   c3 can become stable v1.3.0.
+2. **Storage-latency investigation.** Reproduce the volatile random-write tail
+   with more controlled cache/thermal state, then evaluate one compatible eMMC
+   or block-layer change at a time. No change should ship merely to improve one
+   benchmark run.
+3. **Scheduler wave 2.** Review Android-common and compatible SDM439 EAS fixes
+   for idle placement, load tracking and migration. Each patch stays separate
+   and must improve the workload it actually targets.
+4. **Low-memory wave 2.** Instrument reclaim/compaction, PSI and `lmkd` during
+   real app switching, then consider narrow 4.9 backports that reduce refaults
+   or stalls. A larger synthetic allocation alone is not the goal.
+5. **Power/thermal policy.** Measure CPU idle residency, schedutil frequency
+   time and thermal throttling before altering governor or bus/devfreq policy.
+6. **Optional features.** WireGuard, additional filesystems or sound controls
+   are possible only where they solve a real use case and do not destabilize
+   the 2 GB production configuration.
+
+This keeps development moving in larger, coherent waves while preserving an
+independently testable rollback point after each one.
 
 ## Evidence limits
 
-- Only one TB-X505L 2/32 GB unit, one Lenovo vendor build and one crDroid/PHH
+- One TB-X505L 2/32 GB unit, one Lenovo vendor build and one crDroid/PHH
   Android 13 system were exercised.
-- r8-c2 was temporary-booted, not permanently flashed.
-- Automated checks prove service/device presence and exercised kernel paths;
-  they do not replace the owner's final physical touch, display, camera,
-  microphone and long-duration battery check.
-- The network smoke test proves availability and basic operation, not that BBR
-  or either qdisc improves every Wi-Fi or LTE workload.
-- KCAL and additional congestion algorithms add optional controls; they do not
-  make the tablet faster by themselves.
+- Automated checks do not replace long-duration battery, suspend/resume and
+  physical input-latency testing.
+- The network smoke test proves availability, not superiority of a congestion
+  algorithm on every connection.
 - Linux 4.9 and the Android 10 vendor security level remain old.
-
-## Next development package
-
-The next low-risk wave should focus on measurable scheduler, reclaim and I/O
-latency improvements. Each candidate should be compared against this c2 state
-with the same native, UI, pressure and feature-regression harness. ThinLTO,
-major scheduler replacement and GPU overclocking remain isolated experiments
-because they have materially larger boot, ABI, thermal or stability risk.
 
 ## Donor and upstream references
 

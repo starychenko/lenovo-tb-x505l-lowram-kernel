@@ -5,7 +5,8 @@ This companion profile is for the tested TB-X505L configuration only:
 - Lenovo TB-X505L 2/32 GB;
 - stock Lenovo Android 10 vendor `X505L_S001149_221018_ROW`;
 - crDroid 9.10 Android 13 PHH GSI;
-- a qualified kernel whose release contains `tbx505l-r6` or `tbx505l-r7`.
+- a qualified kernel whose release contains `tbx505l-r6`, `tbx505l-r7` or
+  `tbx505l-r8-*`.
 
 It is deliberately separate from the kernel. EAS task placement and
 `schedutil` response thresholds are Android runtime policy, and Android's
@@ -24,10 +25,14 @@ schedutil hispeed_freq 1497600
 schedutil hispeed_load       75
 schedutil up_rate_limit_us    0
 schedutil down_rate_limit_us 20000
+scheduler statistics          0
 ```
 
 The script refuses another Lenovo model and refuses a kernel without a
-qualified r6/r7 identity. Every write is read back and verified.
+qualified r6/r7/r8 identity. Every write is read back and verified. The final
+setting disables continuous scheduler-statistics accounting after Android's
+`atrace.rc` enables it during boot. Tracing tools can still enable it again
+when required; the profile reapplies the production value on the next boot.
 
 ## Install
 
@@ -55,9 +60,12 @@ adb shell cat /data/local/tmp/tb-x505l-balanced-profile.log
 adb shell /system/bin/tb-x505l-balanced-profile.sh show
 ```
 
-The hook runs asynchronously after `sys.boot_completed`. The installer removes
-the previous log so a missing file means the new run has not finished yet;
-wait for `profile=balanced-ui status=applied` before evaluating the readback.
+The hook starts before PHH's unrelated 30-second cleanup delay. It waits only
+until every policy node is writable, applies the profile once, then applies it
+again five seconds after `sys.boot_completed`. The second pass is required
+because Android init or PowerHAL can rewrite scheduler and governor policy
+during service startup. The installer removes the previous log; wait for
+`stage=post-boot` before evaluating the final readback.
 
 If r5 or another kernel is running, the profile logs a skip and changes
 nothing. The installer migrates the original r6-only hook marker in place so
@@ -93,3 +101,9 @@ The r7 release retained the same scheduler nodes and the installer/readback
 path, including an automatic post-reboot apply, was verified after the
 permanent r7 flash. The performance percentages above remain r6 measurements;
 no separate r7 PCMark gain is claimed.
+
+On r8-c2, a controlled live A/B check found that disabling scheduler statistics
+reduced cross-core wake-up mean latency by roughly 7-9% and loaded p95 by about
+2%, without a measurable single-thread throughput loss. The r8 profile keeps
+the kernel ABI unchanged and applies that reversible runtime policy instead of
+compiling out `SCHEDSTATS`/`SCHED_INFO`.

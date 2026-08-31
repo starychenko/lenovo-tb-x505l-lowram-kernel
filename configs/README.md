@@ -25,6 +25,11 @@
   Its SHA-256 is
   `d0d68d6d28e3733840d55a452d76654b6b007cbb46793c35369015278e70cf90`.
   See `docs/R8_ENGINEERING.md`.
+- `tb-x505l-r8-fastpath-c3.config` is the permanently qualified c3 config.
+  Its functional options are identical to c2; only `CONFIG_LOCALVERSION`
+  changes because c3's scheduler, reclaim, compaction and I2C work is in the
+  source patch. Its SHA-256 is
+  `a7b9cb80d60cca83306e897647c49571033427c9ced57b36858a6b62ea996005`.
 
 Important delta:
 
@@ -42,5 +47,6 @@ CONFIG_LZ4_DECOMPRESS=y
 
 Do not merge fragments into an arbitrary Qualcomm 4.9 config and assume ABI
 compatibility. The final r7 config is tied to source commit `ca9f99dc...`; the
-r8-c2 config is tied to `476936bf...` or the exact r7 base plus the published
-r8 patch.
+r8-c2 is tied to `476936bf...`; c3 is tied to `45a98eac...`. Reconstruct c3
+from the exact r7 base by applying the published c2 patch followed by the c3
+incremental patch.

@@ -5,9 +5,10 @@ publishing raw `getprop`, full dmesg, device identifiers or third-party APKs.
 
 - `runtime-validation.txt` is the successful active feature-pack validation.
 - `native-results.txt` contains two short CPU, RAM, wake-up-latency and I/O
-  repetitions. It is not a matched r7/r8 comparison.
+  repetitions; `identity.txt` preserves their controls.
 - `launch-summary.csv` and `jank-summary.csv` are the Android UI smoke
-  summaries.
+  summaries. `ui-identity.txt` records that the old profile guard skipped r8,
+  so this UI run used ROM-default scheduler policy.
 - `memory-pressure-result.txt` and `memory-pressure-telemetry.csv` describe the
   concurrent 512 MiB pressure run.
 
