@@ -15,19 +15,19 @@ Do not treat a similar product name as proof of compatibility. Check the model, 
 
 Download these files from the same GitHub Release:
 
-- `tb-x505l-lowram-r6-boot.img`
+- `tb-x505l-lowram-r7-boot.img`
 - `SHA256SUMS.txt`
 
 On PowerShell:
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\tb-x505l-lowram-r6-boot.img
+Get-FileHash -Algorithm SHA256 .\tb-x505l-lowram-r7-boot.img
 ```
 
-Expected r6 boot hash:
+Expected r7 boot hash:
 
 ```text
-9e9bba24ab8af0ca19fc655ded6339a1fd1cfe3f944364aa61a0be2d917b8a72
+4c30c952703b5d509953a06c4a66cfee60f08395f06555e2e5027623b9846cc3
 ```
 
 The image is exactly 67,108,864 bytes.
@@ -56,7 +56,7 @@ If `adb root` is unavailable, obtain the exact factory firmware from Lenovo or b
 ```text
 adb reboot bootloader
 fastboot devices
-fastboot boot tb-x505l-lowram-r6-boot.img
+fastboot boot tb-x505l-lowram-r7-boot.img
 ```
 
 `fastboot boot` loads the image into memory without writing the boot partition. Wait for Android to complete startup, then verify:
@@ -82,7 +82,8 @@ adb shell cat /sys/kernel/mm/ksm/run
 adb shell "cat /proc/modules | wc -l"
 ```
 
-Expected essentials are `4.9.205-tbx505l-r6+ #7`, 25 loaded modules, audio
+Expected essentials are
+`4.9.337-tbx505l-r7-4.9.337-compat-vendor+ #14`, 25 loaded modules, audio
 card `sdm439-snd-card-mtp`, active `wlan0`, `[lz4]`, KSM value `1`, and
 `[deadline]` in `/sys/block/mmcblk0/queue/scheduler`.
 
@@ -93,7 +94,7 @@ Only after the temporary image passes the complete hardware checklist:
 ```text
 adb reboot bootloader
 fastboot devices
-fastboot flash boot tb-x505l-lowram-r6-boot.img
+fastboot flash boot tb-x505l-lowram-r7-boot.img
 fastboot reboot
 ```
 
@@ -104,7 +105,7 @@ adb root
 adb shell "dd if=/dev/block/by-name/boot bs=1048576 2>/dev/null | sha256sum"
 ```
 
-It must print the release hash `9e9bba24...b8a72`.
+It must print the release hash `4c30c952...46cc3`.
 
 ## Optional Android 13 responsiveness profile
 
@@ -119,9 +120,10 @@ rooted ADB in PHH settings, then run:
 ```
 
 Reboot and verify
-`/data/local/tmp/tb-x505l-balanced-profile.log`. The script refuses another
-model and any kernel without an r6 identity. Removal does not require a kernel
-flash:
+`/data/local/tmp/tb-x505l-balanced-profile.log`. The asynchronous hook may take
+up to two minutes; wait for `profile=balanced-ui status=applied`. The script refuses another
+model and any kernel without a qualified r6/r7 identity. Removal does not
+require a kernel flash:
 
 ```powershell
 .\device\crdroid13-balanced-profile\uninstall.ps1 `

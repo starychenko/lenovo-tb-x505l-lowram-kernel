@@ -1,6 +1,7 @@
 # Build and release output
 /artifacts/
 /release-staging/
+/outputs/
 /out/
 /out-*/
 

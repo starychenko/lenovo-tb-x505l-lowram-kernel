@@ -55,9 +55,9 @@ device_is_supported() {
 
     kernel_release="$(uname -r)"
     case "$kernel_release" in
-        *tbx505l-r6*) ;;
+        *tbx505l-r6*|*tbx505l-r7*) ;;
         *)
-            report "skip: profile requires a TB-X505L r6 kernel: $kernel_release"
+            report "skip: profile requires a qualified TB-X505L r6/r7 kernel: $kernel_release"
             return 1
             ;;
     esac

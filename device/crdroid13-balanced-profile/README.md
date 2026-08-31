@@ -5,7 +5,7 @@ This companion profile is for the tested TB-X505L configuration only:
 - Lenovo TB-X505L 2/32 GB;
 - stock Lenovo Android 10 vendor `X505L_S001149_221018_ROW`;
 - crDroid 9.10 Android 13 PHH GSI;
-- a kernel whose release contains `tbx505l-r6`.
+- a qualified kernel whose release contains `tbx505l-r6` or `tbx505l-r7`.
 
 It is deliberately separate from the kernel. EAS task placement and
 `schedutil` response thresholds are Android runtime policy, and Android's
@@ -26,8 +26,8 @@ schedutil up_rate_limit_us    0
 schedutil down_rate_limit_us 20000
 ```
 
-The script refuses another Lenovo model and refuses a kernel without an r6
-identity. Every write is read back and verified.
+The script refuses another Lenovo model and refuses a kernel without a
+qualified r6/r7 identity. Every write is read back and verified.
 
 ## Install
 
@@ -55,8 +55,13 @@ adb shell cat /data/local/tmp/tb-x505l-balanced-profile.log
 adb shell /system/bin/tb-x505l-balanced-profile.sh show
 ```
 
+The hook runs asynchronously after `sys.boot_completed`. The installer removes
+the previous log so a missing file means the new run has not finished yet;
+wait for `profile=balanced-ui status=applied` before evaluating the readback.
+
 If r5 or another kernel is running, the profile logs a skip and changes
-nothing.
+nothing. The installer migrates the original r6-only hook marker in place so
+existing installations do not acquire a duplicate boot hook.
 
 ## Remove
 
@@ -83,3 +88,8 @@ UI workload recorded about 5.6% more CPU cycles and 9-10% more context
 switches. USB power made current measurements unsuitable for a battery-life
 claim. Treat the profile as a responsiveness setting and re-check real standby
 and active-use battery life over several days.
+
+The r7 release retained the same scheduler nodes and the installer/readback
+path, including an automatic post-reboot apply, was verified after the
+permanent r7 flash. The performance percentages above remain r6 measurements;
+no separate r7 PCMark gain is claimed.

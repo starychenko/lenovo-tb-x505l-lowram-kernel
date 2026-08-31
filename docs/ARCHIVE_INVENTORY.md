@@ -6,31 +6,34 @@ toolchain later disappears.
 
 ## Stored in the Git repository
 
-- exact baseline, r5 and r6 kernel configurations, including rejected r6
-  candidate configs;
-- the complete five-file r5 source patch;
+- exact baseline, r5, r6 and r7 kernel configurations, including rejected or
+  superseded r6/r7 candidate configs;
+- the complete five-file r5 source patch and the independent r7 camera PM QoS
+  lifecycle patch;
 - build, repack, temporary-boot, validation and recovery scripts;
 - PHH device-hook patch, reversible LineageOS tuning and the measured crDroid
   13 EAS/schedutil profile;
-- native AArch64 benchmark source, Android test wrappers and privacy-reviewed
-  generated r6 result summaries;
+- native AArch64 benchmark source, Android test wrappers, module-CRC and
+  memory-pressure tools, plus privacy-reviewed generated r6/r7 summaries;
 - module ABI-analysis tools used during development;
-- source provenance, failed approaches, security trade-offs and physical test
-  boundaries;
+- source provenance, the staged 4.9.205 -> 4.9.206 -> 4.9.227 -> 4.9.337
+  integration history, failed approaches, security trade-offs and physical
+  test boundaries;
 - firmware identification and verification metadata, but not Lenovo binaries;
 - the X.509 generation recipe required for byte-identical builds.
 
 ## Stored as GitHub Release assets
 
-- final flashable boot image and raw kernel `Image`;
+- final flashable r7 boot image and raw kernel `Image`;
 - config, `System.map`, `Module.symvers` and generated `compile.h`;
-- exact frozen Lenovo/CAF base source archive;
-- complete corresponding source with the common r5/r6 source patch applied;
+- complete corresponding source at r7 commit
+  `ca9f99dcda9bc0cf55271157d3a5718ed8cf6e3b`;
+- a tagged project archive with every public script, config, patch and document;
 - exact Android Clang r365631c and AArch64 GCC 4.9 build toolchains, including
   their license and notice files;
 - deliberately public reproducibility key and certificate metadata;
-- a clearly marked archive of non-release engineering kernel outputs and build
-  evidence;
+- a privacy-reviewed archive of candidate, ABI, benchmark, memory-pressure,
+  permanent-flash and camera evidence;
 - a convenient public-artifact bundle and SHA-256 manifest.
 
 Generated `.o` files are not archived individually. They add several gigabytes,
@@ -57,6 +60,6 @@ Also excluded from public storage:
 - screenshots, photographs and UI hierarchy captures;
 - third-party APKs and Magisk binaries.
 
-These exclusions do not prevent rebuilding r5 or r6. Repacking a boot image still
-requires each owner to provide a matching boot image from their own device or
-factory package.
+These exclusions do not prevent rebuilding r5, r6 or r7. Repacking a boot image
+still requires each owner to provide a matching boot image from their own
+device or factory package.

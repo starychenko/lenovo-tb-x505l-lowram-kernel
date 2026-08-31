@@ -1,10 +1,10 @@
 # Lenovo TB-X505L low-RAM kernel
 
-Validated Linux 4.9.205 kernel work for the 2 GB RAM Lenovo Tab M10 HD
-TB-X505L. The current r6 build was qualified on crDroid 9.10 Android 13 PHH
-GSI with the stock Android 10 vendor partition.
+Validated Linux 4.9.337 kernel work for the 2 GB RAM Lenovo Tab M10 HD
+TB-X505L. The current r7 build was qualified and permanently installed on
+crDroid 9.10 Android 13 PHH GSI with the stock Android 10 vendor partition.
 
-[Українська версія](README.uk.md) · [Installation](docs/INSTALL.md) · [Build](docs/BUILD.md) · [r6 engineering](docs/R6_ENGINEERING.md) · [r5 validation](docs/VALIDATION.md) · [Archive inventory](docs/ARCHIVE_INVENTORY.md)
+[Українська версія](README.uk.md) · [Installation](docs/INSTALL.md) · [Build](docs/BUILD.md) · [r7 engineering](docs/R7_ENGINEERING.md) · [Camera HAL logging](docs/CAMERA_HAL_LOGGING.md) · [r6 engineering](docs/R6_ENGINEERING.md) · [Archive inventory](docs/ARCHIVE_INVENTORY.md)
 
 ## Read this first
 
@@ -22,8 +22,9 @@ The stock Lenovo boot image and proprietary vendor modules are deliberately not 
 
 ## What changed
 
-| Area | Stock configuration | r6 |
+| Area | Stock configuration | r7 |
 |---|---|---|
+| Kernel line | Lenovo/CAF Linux 4.9.205 | staged CAF integration followed by Linux 4.9.337 |
 | Memory pressure | PSI disabled | `CONFIG_PSI=y`; Android `lmkd` uses `/proc/pressure/memory` |
 | Memory cgroups | disabled | `CONFIG_MEMCG=y`, swap accounting enabled |
 | Low-memory killing | legacy in-kernel LMK | legacy LMK disabled; userspace `lmkd` handles pressure |
@@ -66,41 +67,43 @@ This is a real security trade-off. Read [SECURITY.md](SECURITY.md) and the kerne
 
 ## Tested result
 
-The final `r6` image first completed a temporary `fastboot boot` and was then
+The final `r7` image first completed a temporary `fastboot boot` and was then
 flashed permanently. The following were verified:
 
 - all 25 required Lenovo modules loaded;
 - audio card, speakers, Wi-Fi, front/rear cameras, touch and gestures;
 - microphone input works, although the tested tablet's microphone is weak and may have a mechanical defect;
 - PSI, KSM, 1 GiB LZ4 zRAM and userspace `lmkd` integration;
-- final native CPU, RAM, wake-up-latency and direct-I/O smoke test;
-- final Android launch and 621-frame Settings-scroll smoke test;
+- controlled native CPU, RAM, wake-up-latency and direct-I/O comparisons;
+- repeated Android launch and Settings-scroll comparisons;
 - Bluetooth OFF -> ON -> OFF, active accelerometer and two camera devices;
-- written boot-partition SHA-256 matched the released image exactly.
+- repeated camera lifecycles after the PM QoS fix;
+- written boot-partition SHA-256 matched the released image exactly;
+- the first permanent-boot dmesg fault scan was clean.
 
-The r6 work also includes three controlled kernel candidates, custom subsystem
-benchmarks, repeated UI runs and PCMark Work/Storage comparisons. See
-[docs/R6_ENGINEERING.md](docs/R6_ENGINEERING.md) for the results and evidence
-limits. The original r5 memory-pressure qualification remains in
-[docs/VALIDATION.md](docs/VALIDATION.md).
+The r7 work preserves the complete 4.9.206 -> 4.9.227 -> 4.9.337 integration
+history, module ABI audit, custom subsystem benchmarks, UI controls, a 700 MiB
+memory-pressure run and camera diagnosis. See
+[docs/R7_ENGINEERING.md](docs/R7_ENGINEERING.md) for the results and evidence
+limits. r6 and the original r5 qualification remain documented separately.
 
 ## Quick start
 
-1. Download `tb-x505l-lowram-r6-boot.img` and `SHA256SUMS.txt` from the latest release.
+1. Download `tb-x505l-lowram-r7-boot.img` and `SHA256SUMS.txt` from the latest release.
 2. Verify the SHA-256 checksum.
 3. Back up your own boot partition.
 4. Test without flashing:
 
 ```text
 adb reboot bootloader
-fastboot boot tb-x505l-lowram-r6-boot.img
+fastboot boot tb-x505l-lowram-r7-boot.img
 ```
 
 5. Verify all hardware. Only then flash permanently:
 
 ```text
 adb reboot bootloader
-fastboot flash boot tb-x505l-lowram-r6-boot.img
+fastboot flash boot tb-x505l-lowram-r7-boot.img
 fastboot reboot
 ```
 
@@ -108,10 +111,11 @@ The tested tablet has a faulty Volume Up button, so all recovery-safe paths use 
 
 ## Repository contents
 
-- `configs/` - exact baseline and final kernel configurations.
+- `configs/` - exact baseline, candidate and final kernel configurations.
 - `benchmarks/` - the native AArch64 CPU/RAM/latency/I/O benchmark source.
 - `analysis/` - generic module ABI and upstream-snapshot investigation tools.
-- `patches/` - validated source patch shared by r5 and r6.
+- `patches/` - validated r5/r6 patch and the independently reviewable r7
+  camera lifecycle fix.
 - `device/` - the PHH low-RAM hook and reversible Android 13 runtime profile.
 - `firmware/` - exact factory-package identity and checksum metadata.
 - `historical/` - rejected engineering approaches retained with warnings.
@@ -121,16 +125,25 @@ The tested tablet has a faulty Volume Up button, so all recovery-safe paths use 
 - GitHub Releases - final and engineering artifacts, both source states, exact
   toolchains, reproducibility material and checksums.
 
-Non-release engineering images are preserved in a separate archive and clearly
-marked as unsupported rather than presented as flashable releases.
+Privacy-reviewed engineering evidence is preserved in a separate release
+archive. Intermediate images remain unsupported and are not presented as
+flashable releases.
 
 ## Source provenance
 
-The exact staged Lenovo source tree used as the base is Git tree `6764b8e36f9506f89cee6f1e7711cd54ae54d32b`, materialized on top of CAF commit `4e699d80a1f43d3dd380d1c7a50cc8fa0ee30440` (`LA.UM.8.6.2.r1-06100-89xx.0`). Using the CAF commit alone is not sufficient; the release contains the complete corresponding source archive.
+The original device base is the staged Lenovo tree
+`6764b8e36f9506f89cee6f1e7711cd54ae54d32b` on CAF commit
+`4e699d80a1f43d3dd380d1c7a50cc8fa0ee30440`. r7 integrates that device line
+through CAF 4.9.206/4.9.227 into KudProject's Linux 4.9.337 commit
+`cad7430de0364a908d73cea93d06f9ca44ad439e`; the qualified final source commit
+is `ca9f99dcda9bc0cf55271157d3a5718ed8cf6e3b`. A base commit alone is not
+sufficient, so the release contains the complete corresponding r7 source
+archive.
 
 Related upstream work:
 
 - [Lenovo-TB-X505X kernel repository](https://github.com/Lenovo-TB-X505X/android_kernel_lenovo_TB-X505X)
+- [KudProject kernel_msm-4.9](https://github.com/KudProject/kernel_msm-4.9)
 - [PHH Treble experiments](https://github.com/phhusson/treble_experimentations)
 - [Magisk / MagiskBoot](https://github.com/topjohnwu/Magisk)
 

@@ -49,7 +49,7 @@ $workingPath = Join-Path ([System.IO.Path]::GetTempPath()) "tb-x505l-phh-on-boot
 try {
     Invoke-Adb -Arguments @('pull', '/system/bin/phh-on-boot.sh', $backupPath)
     $text = [System.IO.File]::ReadAllText($backupPath)
-    $pattern = '(?ms)^# BEGIN TB-X505L r6 balanced profile\r?\n.*?^# END TB-X505L r6 balanced profile\r?\n?'
+    $pattern = '(?ms)^# BEGIN TB-X505L (?:r6 )?balanced profile\r?\n.*?^# END TB-X505L (?:r6 )?balanced profile\r?\n?'
     $updated = [System.Text.RegularExpressions.Regex]::Replace($text, $pattern, '')
     if ($updated -eq $text) {
         Write-Host 'Boot hook marker was not present.'
@@ -65,9 +65,9 @@ try {
 
     Invoke-Adb -Arguments @('shell', 'rm -f /system/bin/tb-x505l-balanced-profile.sh /data/local/tmp/tb-x505l-balanced-profile.log')
 
-    $markerCount = Invoke-Adb -Arguments @('shell', "grep -c '^# BEGIN TB-X505L r6 balanced profile$' /system/bin/phh-on-boot.sh || true") -Capture
+    $markerCount = Invoke-Adb -Arguments @('shell', "grep -Ec '^# BEGIN TB-X505L (r6 )?balanced profile$' /system/bin/phh-on-boot.sh || true") -Capture
     if ($markerCount -ne '0') {
-        throw "Boot hook removal failed; marker count is $markerCount"
+        throw "Boot hook removal failed; remaining marker count is $markerCount"
     }
 
     Write-Host "Removed. Pre-removal backup: $backupPath"

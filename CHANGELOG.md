@@ -1,5 +1,34 @@
 # Changelog
 
+## r7 / v1.2.0 - 2026-08-31
+
+- Integrated the TB-X505L device line through CAF Linux 4.9.206 and 4.9.227
+  into the KudProject Linux 4.9.337 baseline.
+- Preserved the r5/r6 PSI, memory-cgroup, userspace `lmkd`, KSM, LZ4 zRAM,
+  deadline and narrow 25-module compatibility design.
+- Adapted the newer KGSL A6xx postamble path to the legacy shared scratch
+  layout required by the shipping Adreno firmware.
+- Restored the Lenovo timer helper ABI required by `pronto_wlan.ko`; the final
+  audit covers 25 modules, 2,004 requirement rows and 980 unique symbols with
+  zero missing kernel symbols.
+- Fixed the Qualcomm camera PM QoS request lifecycle and verified repeated
+  rear/front camera cycles without its previous warning or call trace.
+- Compared 415 live camera vendor files against the archived S001149 factory
+  vendor image; all 415 hashes matched.
+- Added documented reversible Camera HAL logging profiles without patching or
+  redistributing proprietary blobs.
+- Ran controlled native and Android UI comparisons against the usable 4.9.227
+  candidate and published both improvements and regressions.
+- Completed a 700 MiB pressure run; both workers finished, with two order-0
+  allocation failures recorded only at the most extreme memory point.
+- Temporarily booted and then permanently flashed the final c4 image, verified
+  the boot-partition SHA-256, 25 modules, core hardware, real network traffic,
+  runtime memory features and a clean first-boot kernel fault scan.
+- Extended and live-verified the optional crDroid 13 balanced profile on r7,
+  including migration of the original r6-only boot-hook marker.
+- Added the complete r7 source/config/build provenance, release helper,
+  candidate history, privacy-reviewed evidence and recovery documentation.
+
 ## r6 / v1.1.0 - 2026-08-31
 
 - Qualified the kernel on crDroid 9.10 Android 13 PHH GSI with the same stock

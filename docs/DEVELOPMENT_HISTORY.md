@@ -60,3 +60,31 @@ The working design passed 700 MiB and 900 MiB pressure tests without kernel fail
 r5 was rebuilt with pinned Clang 9.0.8 after rejecting an accidental GCC candidate. The boot image was unpacked again to verify its raw kernel and DTB hashes. It completed repeated temporary boots, physical hardware testing, final stress testing, and then a permanent flash with full partition readback.
 
 Obsolete candidates are not release assets because their only useful role is captured in this history.
+
+## 10. r6 measurement before tuning
+
+r6 kept the proven 4.9.205 source policy and compared HZ, I/O scheduler and
+Android runtime-profile candidates with a native benchmark and repeated UI
+workloads. The 300 Hz kernel was rejected; 100 Hz plus deadline was retained.
+The Android EAS/schedutil profile stayed outside `boot.img` because Android
+PowerHAL/init policy can overwrite kernel defaults and because a separate
+profile has a clean uninstall path. Full results are in `R6_ENGINEERING.md`.
+
+## 11. r7 upstream integration
+
+r7 treated the kernel-version update as a sequence of compatibility gates:
+
+1. merge and boot CAF 4.9.206;
+2. merge CAF 4.9.227 and separate Adreno firmware from vendor-module issues;
+3. merge the device line into Linux 4.9.337;
+4. audit every required symbol of all 25 stock modules;
+5. restore the one missing Lenovo timer helper;
+6. run native, UI, pressure and hardware checks;
+7. reproduce and fix the camera PM QoS lifecycle warning;
+8. temporarily boot, permanently flash and hash the final boot partition.
+
+This avoided treating a successful compile or Android home-screen appearance
+as qualification. It also showed why version-number updates are not free
+performance: the final CPU result was neutral, memory throughput improved, and
+some storage/UI tails regressed. The complete evidence and limits are in
+`R7_ENGINEERING.md`.

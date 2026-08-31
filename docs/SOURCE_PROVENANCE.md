@@ -1,6 +1,28 @@
 # Source provenance
 
-## Exact development base
+## r7 final source
+
+The v1.2.0 source archive is the complete working tree at:
+
+```text
+branch  r7-upstream-4.9.337-merge
+commit  ca9f99dcda9bc0cf55271157d3a5718ed8cf6e3b
+tree    generated from that clean commit; .git metadata excluded from the tarball
+```
+
+Its first parent line comes from KudProject's public `kernel_msm-4.9`
+repository at Linux 4.9.337 commit
+`cad7430de0364a908d73cea93d06f9ca44ad439e`. The second parent line carries
+the exact TB-X505L device source and low-RAM changes through CAF 4.9.206 and
+4.9.227.
+
+The integration commits are recorded in [R7_ENGINEERING.md](R7_ENGINEERING.md).
+Three small post-merge compatibility commits provide the legacy KGSL scratch
+layout, Lenovo timer helper ABI and camera PM QoS lifecycle fix. The release
+archive contains their resulting full source, so rebuilding does not depend on
+either donor repository remaining online.
+
+## Original Lenovo development base
 
 The source checkout was intentionally frozen at two levels:
 
@@ -18,7 +40,7 @@ https://github.com/Lenovo-TB-X505X/android_kernel_lenovo_TB-X505X
 
 Its branches were useful for comparison, but the r5 release uses the exact archived tree above rather than assuming that a moving branch remains identical.
 
-## Project modifications
+## r5/r6 project modifications
 
 The release patch changes exactly five tracked files relative to the frozen base:
 
@@ -32,7 +54,7 @@ scripts/gcc-wrapper.py
 
 The patch applies cleanly to a fresh base extraction. Copies of the modified files are not required to rebuild because the complete source release already contains them.
 
-## Configuration
+## r5/r6 configuration
 
 The final config hash is:
 
@@ -50,16 +72,18 @@ CLANG_TRIPLE=aarch64-linux-gnu-
 CROSS_COMPILE=aarch64-linux-android-4.9/bin/aarch64-linux-android-
 ```
 
-Build user, host and timestamp are pinned in [BUILD.md](BUILD.md).
+Build user, host and timestamp are pinned separately for r5/r6/r7 in
+[BUILD.md](BUILD.md).
 
 The release also archives both exact prebuilt toolchain directories, including
 their original `NOTICE`, license, version and manifest files. The build therefore
 does not depend on those prebuilts remaining available from a moving upstream
 branch.
 
-## Release source archive
+## Release source archives
 
-The GitHub Release includes a complete corresponding source tarball rather than only a link to an external branch. It includes:
+Each GitHub Release includes a complete corresponding source tarball rather
+than only a link to an external branch. The r5/r6 source includes:
 
 - the frozen Lenovo/CAF source state;
 - all r5 changes already applied;
@@ -74,3 +98,14 @@ patch was applied independently, and the public build helper reproduced raw
 `4d543f6c817aa11528489338a01e7e7c9158223ead52a2db165d9964bfba3779`
 exactly. The two initially hidden inputs - legacy absolute build paths and the
 timestamp of the empty built-in initramfs - are documented in [BUILD.md](BUILD.md).
+
+The v1.2.0 archive independently preserves the final 4.9.337 tree at
+`ca9f99dc...`. Its exact config SHA-256 is
+`ddb6b6277eedc4f0c45c55a2196d1fb5ffb1fe15409e86a4568124d099845fac`.
+It was created with `git archive` directly from that clean commit. Its checksum
+is included in the release `SHA256SUMS.txt`.
+
+No `.git` object database, build output, Lenovo firmware, proprietary module or
+device backup is placed in the source archive. Git commit IDs and the full
+integration graph are preserved in the documentation; the corresponding final
+source files are preserved in the archive itself.

@@ -1,0 +1,33 @@
+From ca9f99dcda9bc0cf55271157d3a5718ed8cf6e3b Mon Sep 17 00:00:00 2001
+From: Yevhenii Starychenko <Evgeniistarychenko@gmail.com>
+Date: Mon, 31 Aug 2026 14:48:35 +0000
+Subject: [PATCH] msm: camera: reset PM QoS request lifecycle
+
+The vendor camera code guards pm_qos_add_request() with an atomic flag, but
+did not reset that flag after pm_qos_remove_request(). A later camera-provider
+lifecycle then skipped the add and updated an inactive request, producing
+"pm_qos_update_request() called for unknown object" and a kernel warning.
+
+Own the 1 -> 0 transition in the removal path before removing the request.
+This also makes repeated or unmatched removal calls harmless.
+---
+ drivers/media/platform/msm/camera_v2/msm.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/media/platform/msm/camera_v2/msm.c b/drivers/media/platform/msm/camera_v2/msm.c
+index 392d21a48e4..ff8fdbb2a98 100644
+--- a/drivers/media/platform/msm/camera_v2/msm.c
++++ b/drivers/media/platform/msm/camera_v2/msm.c
+@@ -235,6 +235,9 @@ static inline void msm_pm_qos_add_request(void)
+ 
+ static void msm_pm_qos_remove_request(void)
+ {
++	if (atomic_cmpxchg(&qos_add_request_done, 1, 0) != 1)
++		return;
++
+ 	pr_info("%s: remove request", __func__);
+ 	pm_qos_remove_request(&msm_v4l2_pm_qos_request);
+ }
+-- 
+2.51.0
+

@@ -71,20 +71,35 @@ try {
     Copy-Item -LiteralPath $backupPath -Destination $workingPath
 
     $text = [System.IO.File]::ReadAllText($workingPath)
-    $beginMarker = '# BEGIN TB-X505L r6 balanced profile'
+    $legacyBeginMarker = '# BEGIN TB-X505L r6 balanced profile'
+    $legacyEndMarker = '# END TB-X505L r6 balanced profile'
+    $beginMarker = '# BEGIN TB-X505L balanced profile'
+    $endMarker = '# END TB-X505L balanced profile'
+    $hookChanged = $false
+
+    if ($text.Contains($legacyBeginMarker)) {
+        $text = $text.Replace($legacyBeginMarker, $beginMarker).Replace($legacyEndMarker, $endMarker)
+        $hookChanged = $true
+        Write-Host 'Migrating the legacy r6 marker to the release-neutral marker.'
+    }
+
     if ($text.Contains($beginMarker)) {
         Write-Host 'Boot hook already present; refreshing only the profile script.'
     } else {
         $hook = @'
 
-# BEGIN TB-X505L r6 balanced profile
+# BEGIN TB-X505L balanced profile
 if getprop ro.vendor.build.fingerprint | grep -q '^Lenovo/TB-X505L/'; then
     /system/bin/tb-x505l-balanced-profile.sh apply-late \
         >/data/local/tmp/tb-x505l-balanced-profile.log 2>&1 &
 fi
-# END TB-X505L r6 balanced profile
+# END TB-X505L balanced profile
 '@
         $text = $text.TrimEnd("`r", "`n") + "`n" + $hook.TrimStart("`r", "`n")
+        $hookChanged = $true
+    }
+
+    if ($hookChanged) {
         [System.IO.File]::WriteAllText(
             $workingPath,
             $text,
@@ -96,9 +111,14 @@ fi
     Invoke-Adb -Arguments @('push', $profileSource, '/system/bin/tb-x505l-balanced-profile.sh')
     Invoke-Adb -Arguments @('shell', 'chmod 0755 /system/bin/phh-on-boot.sh /system/bin/tb-x505l-balanced-profile.sh')
 
-    $hookCheck = Invoke-Adb -Arguments @('shell', "grep -c '^# BEGIN TB-X505L r6 balanced profile$' /system/bin/phh-on-boot.sh") -Capture
+    $hookCheck = Invoke-Adb -Arguments @('shell', "grep -c '^# BEGIN TB-X505L balanced profile$' /system/bin/phh-on-boot.sh") -Capture
     if ($hookCheck -ne '1') {
         throw "Boot hook verification failed; marker count is $hookCheck"
+    }
+
+    $legacyHookCheck = Invoke-Adb -Arguments @('shell', "grep -c '^# BEGIN TB-X505L r6 balanced profile$' /system/bin/phh-on-boot.sh || true") -Capture
+    if ($legacyHookCheck -ne '0') {
+        throw "Legacy boot hook migration failed; marker count is $legacyHookCheck"
     }
 
     $remoteProfileHash = Invoke-Adb -Arguments @('shell', 'sha256sum /system/bin/tb-x505l-balanced-profile.sh') -Capture
@@ -107,9 +127,13 @@ fi
         throw 'The pushed profile script does not match the local SHA-256.'
     }
 
+    # A previous boot's log can otherwise be mistaken for the new asynchronous
+    # apply-late result immediately after reboot.
+    Invoke-Adb -Arguments @('shell', 'rm -f /data/local/tmp/tb-x505l-balanced-profile.log')
+
     Write-Host "Installed. Original hook backup: $backupPath"
-    Write-Host 'The profile activates only on a TB-X505L r6 kernel and only after Android completes boot.'
-    Write-Host 'Reboot, then inspect /data/local/tmp/tb-x505l-balanced-profile.log.'
+    Write-Host 'The profile activates only on a qualified TB-X505L r6/r7 kernel and only after Android completes boot.'
+    Write-Host 'Reboot, then wait for status=applied in /data/local/tmp/tb-x505l-balanced-profile.log.'
 } finally {
     Remove-Item -LiteralPath $workingPath -Force -ErrorAction SilentlyContinue
 }

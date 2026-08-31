@@ -5,11 +5,15 @@
 The qualified system combines components from different Android generations:
 
 - Lenovo Android 10 vendor partition and proprietary firmware;
-- Linux 4.9.205 kernel ABI;
-- Android 11 LineageOS 18.1 PHH GSI system image;
+- Linux 4.9.337 r7 kernel with compatibility for the shipping 4.9.205-era
+  vendor modules;
+- crDroid 9.10 Android 13 PHH GSI system image (with the original Android 11
+  qualification retained in `VALIDATION.md`);
 - 2 GB physical RAM and a 1 GiB zRAM swap device.
 
-The kernel work focused on aligning the old vendor kernel with the memory-management expectations of Android 11 without replacing the known-working Lenovo hardware modules.
+The kernel work first aligned the vendor kernel with modern userspace memory
+management, then carried that device behavior forward to 4.9.337 without
+replacing the known-working Lenovo hardware modules.
 
 ## Memory-management design
 
@@ -124,4 +128,7 @@ Taint `12290` is `0x3002`, corresponding to forced module (`F`), out-of-tree mod
 - No replacement vendor firmware.
 - No permanent root-hiding or payment-integrity bypass.
 
-Those changes can make benchmark numbers look better while reducing stability, battery life or hardware safety. The r5 scope is low-memory behavior and compatibility proven on the actual device.
+Those changes can make benchmark numbers look better while reducing stability,
+battery life or hardware safety. The project scope is low-memory behavior,
+measured compatibility and conservative upstream integration proven on the
+actual device.

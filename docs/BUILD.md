@@ -1,5 +1,64 @@
 # Reproducing the kernel build
 
+## r7 release build
+
+r7 uses the complete 4.9.337 source tree attached to v1.2.0 at commit
+`ca9f99dcda9bc0cf55271157d3a5718ed8cf6e3b` and the exact config
+`configs/tb-x505l-r7-upstream-4.9.337-compat-vendor.config`.
+
+```bash
+export TB_X505L_BUILD_TIMESTAMP='Mon Aug 31 10:45:00 UTC 2026'
+export TB_X505L_BUILD_VERSION=14
+export TB_X505L_BUILD_USER=codex-r7
+export TB_X505L_BUILD_HOST=tb-x505l
+export TB_X505L_BUILD_JOBS=8
+
+scripts/build-r7-candidate.sh \
+  /path/to/android_kernel_lenovo_4.9.337 \
+  /path/to/clang-r365631c \
+  /path/to/aarch64-linux-android-4.9 \
+  configs/tb-x505l-r7-upstream-4.9.337-compat-vendor.config \
+  /fresh/output/4.9.337-compat-vendor-c4 \
+  /path/to/signing_key.pem
+```
+
+Expected release hashes:
+
+```text
+config          ddb6b6277eedc4f0c45c55a2196d1fb5ffb1fe15409e86a4568124d099845fac
+Image           2ddcf2b84d3b4e5588d3ab43c7ac4835c0249c57e2a6e01d0ec665d074ba6de1
+System.map      2cc922803e61f6eeb526736ac8a1cd206ea0811eb9dd19aef8cec1892ccddc5f
+Module.symvers  5844ecfc61a6dee4ec2ec2b91659a0625528b0c883fd3f6c0dfdfb5ca8226a0d
+```
+
+The helper verifies Linux 4.9.337, the exact r7 local version, the narrow
+vendor-module policy and the camera PM QoS lifecycle fix before building. It
+defaults to eight jobs to bound build memory. Raising the job count changes
+resource use, not the documented build identity, but should be done only when
+the host has sufficient RAM.
+
+The exact original build paths were:
+
+```text
+source  /home/evgen/tb-x505l-r7/git/android_kernel_lenovo_4.9.337
+output  /home/evgen/tb-x505l-r7/build/4.9.337-compat-vendor-c4
+clang   /home/evgen/tb-x505l-r6/toolchains/clang-r365631c
+gcc     /home/evgen/tb-x505l-r6/toolchains/aarch64-linux-android-4.9
+```
+
+Legacy Android kernel objects embed absolute paths, so use those paths when a
+byte-identical `Image` is required. Another path should produce a functionally
+equivalent image but is not promised to have the same SHA-256. The release
+source archive omits `.git`; the helper accepts both that archive and a Git
+checkout.
+
+r7 reuses the public project signing key archived with v1.1.0. Its PEM SHA-256
+is `49ec24024920789b0c6d7a47c5151857f56941dfd57a9eb73b37f12e0e1591a6`.
+It is a reproducibility input, not Lenovo's private production key or a user
+credential. The exact toolchain archives remain on v1.0.0.
+
+The r6/r5 instructions below remain available to reproduce the older releases.
+
 ## r6 release build
 
 r6 uses the same patched source commit and public reproducibility key as r5.

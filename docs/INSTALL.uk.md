@@ -11,13 +11,13 @@
 ## Перевірка завантаженого файла
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\tb-x505l-lowram-r6-boot.img
+Get-FileHash -Algorithm SHA256 .\tb-x505l-lowram-r7-boot.img
 ```
 
 Очікуваний SHA-256:
 
 ```text
-9e9bba24ab8af0ca19fc655ded6339a1fd1cfe3f944364aa61a0be2d917b8a72
+4c30c952703b5d509953a06c4a66cfee60f08395f06555e2e5027623b9846cc3
 ```
 
 Розмір: 67 108 864 байти.
@@ -39,7 +39,7 @@ adb shell "rm -f /data/local/tmp/boot-backup.img"
 
 ```text
 adb reboot bootloader
-fastboot boot tb-x505l-lowram-r6-boot.img
+fastboot boot tb-x505l-lowram-r7-boot.img
 ```
 
 Ця команда нічого не записує. Перевірте тач, жести, Wi-Fi, звук, обидві камери, мікрофон, заряджання та sleep/wake.
@@ -55,7 +55,7 @@ adb shell cat /sys/block/zram0/comp_algorithm
 adb shell cat /sys/kernel/mm/ksm/run
 ```
 
-Має бути `4.9.205-tbx505l-r6+ #7`, 25 модулів, аудіокарта
+Має бути `4.9.337-tbx505l-r7-4.9.337-compat-vendor+ #14`, 25 модулів, аудіокарта
 `sdm439-snd-card-mtp`, `[lz4]`, KSM `1` і `[deadline]` у
 `/sys/block/mmcblk0/queue/scheduler`.
 
@@ -65,7 +65,7 @@ adb shell cat /sys/kernel/mm/ksm/run
 
 ```text
 adb reboot bootloader
-fastboot flash boot tb-x505l-lowram-r6-boot.img
+fastboot flash boot tb-x505l-lowram-r7-boot.img
 fastboot reboot
 ```
 
@@ -76,8 +76,8 @@ adb root
 adb shell "dd if=/dev/block/by-name/boot bs=1048576 2>/dev/null | sha256sum"
 ```
 
-Результат має починатись із `9e9bba24` і повністю збігатись із SHA-256
-завантаженого r6-образу.
+Результат має починатись із `4c30c952` і повністю збігатись із SHA-256
+завантаженого r7-образу.
 
 ## Додатковий профіль швидкодії Android 13
 
@@ -91,9 +91,10 @@ adb shell "dd if=/dev/block/by-name/boot bs=1048576 2>/dev/null | sha256sum"
   -Serial DEVICE_SERIAL
 ```
 
-Після перезавантаження перевірте
-`/data/local/tmp/tb-x505l-balanced-profile.log`. Видалення не потребує прошивки
-ядра:
+Після перезавантаження дочекайтесь
+`profile=balanced-ui status=applied` у
+`/data/local/tmp/tb-x505l-balanced-profile.log` (асинхронний hook може
+працювати до двох хвилин). Видалення не потребує прошивки ядра:
 
 ```powershell
 .\device\crdroid13-balanced-profile\uninstall.ps1 `
