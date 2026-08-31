@@ -1,0 +1,124 @@
+# Reproducing the kernel build
+
+## Exact inputs
+
+- Either the complete corresponding source archive from the r5 release, or the
+  exact base archive plus `patches/tb-x505l-lowram-r5.patch` from this repository.
+- `configs/tb-x505l-lowram-r5.config`.
+- Android Clang 9.0.8 build `r365631c`.
+- AArch64 Android GCC 4.9 cross-toolchain for binutils.
+- `signing_key.pem` from `tb-x505l-r5-reproducibility-key.tar.gz` when an
+  exact byte-for-byte result is required.
+- Linux or WSL2 with GNU make, Python 3, Perl, bc, bison, flex, OpenSSL development headers and standard kernel-build utilities.
+
+Build identity:
+
+```text
+Linux 4.9.205-perf+
+KBUILD_BUILD_USER=codex-lowram
+KBUILD_BUILD_HOST=tb-x505l
+KBUILD_BUILD_VERSION=5
+KBUILD_BUILD_TIMESTAMP=Sun Aug 30 21:18:08 UTC 2026
+```
+
+The timestamp, build number and local-version suffix are pinned because they are
+embedded into the kernel and affect the final hash. The helper also regenerates
+the empty built-in initramfs with its historical cpio timestamp
+`Sun Aug 30 19:02:44 UTC 2026` before compiling the final kernel. The boot image
+still has a zero-length Android ramdisk; this is a tiny built-in kernel archive
+containing only the default device nodes.
+
+## Prepare the source
+
+The release's complete source archive already contains the r5 modifications and config for license compliance. To reproduce the original development path from the exact Lenovo base archive instead:
+
+```bash
+tar -xzf lenovo-tb-x505l-kernel-base-6764b8e3.tar.gz
+cd android_kernel_lenovo-q-205
+git apply /path/to/tb-x505l-lowram-r5.patch
+mkdir -p out-lowram
+cp /path/to/tb-x505l-lowram-r5.config out-lowram/.config
+```
+
+The patch was validated both in reverse against the build tree and forward against a fresh extraction of the base tree.
+
+## Exact build command
+
+```bash
+env \
+  KBUILD_BUILD_USER=codex-lowram \
+  KBUILD_BUILD_HOST=tb-x505l \
+  KBUILD_BUILD_VERSION=5 \
+  KBUILD_BUILD_TIMESTAMP='Sun Aug 30 21:18:08 UTC 2026' \
+  make O=out-lowram \
+  ARCH=arm64 \
+  SUBARCH=arm64 \
+  LOCALVERSION=+ \
+  HOSTCFLAGS=-fcommon \
+  CC=/opt/android/clang-r365631c/bin/clang \
+  CLANG_TRIPLE=aarch64-linux-gnu- \
+  CROSS_COMPILE=/opt/android/aarch64-linux-android-4.9/bin/aarch64-linux-android- \
+  -j8 Image
+```
+
+Adjust only the toolchain locations. The helper [scripts/build-kernel.sh](../scripts/build-kernel.sh) accepts those locations as arguments and preserves the remaining build identity.
+
+For the exact released hash, unpack the complete source as
+`/home/evgen/android_kernel_lenovo-q-205`, use
+`/home/evgen/android_kernel_lenovo-q-205/out-lowram` as `O=`, and pass the
+release's `signing_key.pem` as the helper's fifth argument:
+
+```bash
+scripts/build-kernel.sh \
+  /home/evgen/android_kernel_lenovo-q-205 \
+  /opt/android/clang-r365631c \
+  /opt/android/aarch64-linux-android-4.9 \
+  /home/evgen/android_kernel_lenovo-q-205/out-lowram \
+  /path/to/signing_key.pem
+```
+
+This legacy tree embeds absolute source/output paths in many compiled strings.
+A different path produces a functionally equivalent kernel but not the same
+bytes. The configuration also embeds an X.509 certificate; without the archived
+build key, OpenSSL creates a new key pair and changes the binary. See
+[reproducibility/README.md](../reproducibility/README.md).
+
+Expected raw `Image` SHA-256:
+
+```text
+4d543f6c817aa11528489338a01e7e7c9158223ead52a2db165d9964bfba3779
+```
+
+If the hash differs, inspect `include/generated/compile.h`, compiler version, config hash and source patch before packaging.
+
+## Why `Image`, not all DTBs
+
+The source tree contains unrelated Qualcomm/Lenovo DTB targets that do not all build cleanly in this environment. The tablet release deliberately reuses the exact DTB extracted from its verified boot image. The qualified target is therefore `Image`; a blanket `make` failure in unrelated `sdm429-spyro*.dtb` targets is not ignored when producing a new DTB, because this project does not produce one.
+
+## Build-time compatibility changes
+
+Two patch sections are build-only:
+
+- unsupported warning switches are wrapped with `cc-disable-warning`;
+- the legacy Qualcomm `gcc-wrapper.py` is ported from Python 2 to Python 3.
+
+These changes do not alter runtime policy.
+
+## Repacking the boot image
+
+The tested boot format is:
+
+```text
+header version: 1
+page size: 2048
+OS version: 10.0.0
+OS patch level: 2021-12
+ramdisk size: 0
+kernel format: gzip
+stock DTB size: 4218223 bytes
+final image size: 67108864 bytes
+```
+
+MagiskBoot was used on the ARM64 tablet because it preserves the stock header, separates the appended DTB, recompresses the replacement `Image` in the original format and repacks a fixed-size boot image. MagiskBoot is not bundled here; obtain it from the official [Magisk repository](https://github.com/topjohnwu/Magisk).
+
+The helper [scripts/repack-boot-on-device.ps1](../scripts/repack-boot-on-device.ps1) documents and automates the exact sequence. Always repack from your own matching boot image.

@@ -1,0 +1,162 @@
+diff --git a/Makefile b/Makefile
+index 3d2af23a0c0..66f5a696962 100755
+--- a/Makefile
++++ b/Makefile
+@@ -535,11 +535,11 @@ KBUILD_CFLAGS += $(call cc-disable-warning, format-invalid-specifier)
+ KBUILD_CFLAGS += $(call cc-disable-warning, gnu)
+ KBUILD_CFLAGS += $(call cc-disable-warning, address-of-packed-member)
+ KBUILD_CFLAGS += $(call cc-disable-warning, duplicate-decl-specifier)
+-KBUILD_CFLAGS += -Wno-undefined-optimized
+-KBUILD_CFLAGS += -Wno-tautological-constant-out-of-range-compare
++KBUILD_CFLAGS += $(call cc-disable-warning, undefined-optimized)
++KBUILD_CFLAGS += $(call cc-disable-warning, tautological-constant-out-of-range-compare)
+ KBUILD_CFLAGS += $(call cc-option, -Wno-sometimes-uninitialized)
+-KBUILD_CFLAGS += -Wno-asm-operand-widths
+-KBUILD_CFLAGS += -Wno-initializer-overrides
++KBUILD_CFLAGS += $(call cc-disable-warning, asm-operand-widths)
++KBUILD_CFLAGS += $(call cc-disable-warning, initializer-overrides)
+ KBUILD_CFLAGS += -fno-builtin
+ 
+ # Quiet clang warning: comparison of unsigned expression < 0 is always false
+diff --git a/drivers/block/zram/zram_drv.c b/drivers/block/zram/zram_drv.c
+index 853b6310834..10f9a6de8f1 100644
+--- a/drivers/block/zram/zram_drv.c
++++ b/drivers/block/zram/zram_drv.c
+@@ -40,7 +40,11 @@ static DEFINE_IDR(zram_index_idr);
+ static DEFINE_MUTEX(zram_index_mutex);
+ 
+ static int zram_major;
++#if IS_ENABLED(CONFIG_CRYPTO_LZ4)
++static const char *default_compressor = "lz4";
++#else
+ static const char *default_compressor = "lzo";
++#endif
+ 
+ /* Module params (documentation at end) */
+ static unsigned int num_devices = 1;
+diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
+index f1a877b41b2..000bafec0ab 100644
+--- a/fs/proc/task_mmu.c
++++ b/fs/proc/task_mmu.c
+@@ -1658,7 +1658,7 @@ cont:
+ 		if (!page)
+ 			continue;
+ 
+-		if (isolate_lru_page(page))
++		if (isolate_lru_page(compound_head(page)))
+ 			continue;
+ 
+ 		list_add(&page->lru, &page_list);
+diff --git a/kernel/module.c b/kernel/module.c
+index ee3c9f14e79..8047241b5c4 100644
+--- a/kernel/module.c
++++ b/kernel/module.c
+@@ -270,7 +270,13 @@ static void module_assert_mutex_or_preempt(void)
+ #endif
+ }
+ 
+-static bool sig_enforce = IS_ENABLED(CONFIG_MODULE_SIG_FORCE);
++/*
++ * Lenovo's production modules are signed with a private key that is not part
++ * of the published kernel source.  Keep signature verification and module
++ * version checks, but allow modules whose signing key is not in this build's
++ * keyring.  Invalid signatures are still rejected.
++ */
++static bool sig_enforce;
+ #ifndef CONFIG_MODULE_SIG_FORCE
+ module_param(sig_enforce, bool_enable_only, 0644);
+ #endif /* !CONFIG_MODULE_SIG_FORCE */
+@@ -1268,6 +1274,36 @@ static unsigned long maybe_relocated(unsigned long crc,
+ 	return crc;
+ }
+ 
++/*
++ * Lenovo did not publish the exact source/config used for the loadable
++ * TB-X505L audio and WLAN drivers.  The shipping modules are nevertheless
++ * tied to this device and are the only variants that preserve Lenovo's
++ * hardware-specific changes and early-init ordering.  Permit version CRC
++ * drift only for that closed, explicit module set; all other modules keep
++ * normal CONFIG_MODVERSIONS enforcement.
++ */
++static bool tb_x505l_vendor_module(const struct module *mod)
++{
++	static const char * const names[] = {
++		"adsp_loader_dlkm", "analog_cdc_dlkm", "apr_dlkm",
++		"cpe_lsm_dlkm", "digital_cdc_dlkm", "hdmi_dlkm",
++		"machine_dlkm", "machine_ext_dlkm", "mbhc_dlkm",
++		"native_dlkm", "pinctrl_wcd_dlkm", "platform_dlkm",
++		"q6_dlkm", "q6_notifier_dlkm", "stub_dlkm",
++		"swr_ctrl_dlkm", "swr_dlkm", "usf_dlkm",
++		"wcd9335_dlkm", "wcd9xxx_dlkm", "wcd_core_dlkm",
++		"wcd_cpe_dlkm", "wsa881x_analog_dlkm", "wsa881x_dlkm",
++		"wlan",
++	};
++	unsigned int i;
++
++	for (i = 0; i < ARRAY_SIZE(names); i++)
++		if (!strcmp(mod->name, names[i]))
++			return true;
++
++	return false;
++}
++
+ static int check_version(Elf_Shdr *sechdrs,
+ 			 unsigned int versindex,
+ 			 const char *symname,
+@@ -1296,6 +1332,12 @@ static int check_version(Elf_Shdr *sechdrs,
+ 
+ 		if (versions[i].crc == maybe_relocated(*crc, crc_owner))
+ 			return 1;
++		if (tb_x505l_vendor_module(mod)) {
++			add_taint_module(mod, TAINT_FORCED_MODULE,
++					 LOCKDEP_NOW_UNRELIABLE);
++			pr_warn_once("TB-X505L: accepting Lenovo vendor module CRC drift; kernel tainted\n");
++			return 1;
++		}
+ 		pr_debug("Found checksum %lX vs module %lX\n",
+ 		       maybe_relocated(*crc, crc_owner), versions[i].crc);
+ 		goto bad_version;
+diff --git a/scripts/gcc-wrapper.py b/scripts/gcc-wrapper.py
+index 76fb91c5726..66f88df2558 100755
+--- a/scripts/gcc-wrapper.py
++++ b/scripts/gcc-wrapper.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/env python2
++#! /usr/bin/env python3
+ # -*- coding: utf-8 -*-
+ 
+ # Copyright (c) 2011-2016, The Linux Foundation. All rights reserved.
+@@ -55,7 +55,7 @@ def interpret_warning(line):
+     line = line.rstrip('\n')
+     m = warning_re.match(line)
+     if m and m.group(2) not in allowed_warnings:
+-        print >> sys.stderr, "error, forbidden warning:", m.group(2)
++        print("error, forbidden warning:", m.group(2), file=sys.stderr)
+ 
+         # If there is a warning, remove any object if it exists.
+         if ofile:
+@@ -79,18 +79,19 @@ def run_gcc():
+ 
+     try:
+         proc = subprocess.Popen(args, stderr=subprocess.PIPE)
+-        for line in proc.stderr:
+-            print >> sys.stderr, line,
++        for raw_line in proc.stderr:
++            line = raw_line.decode('utf-8', errors='replace')
++            print(line, end='', file=sys.stderr)
+             interpret_warning(line)
+ 
+         result = proc.wait()
+     except OSError as e:
+         result = e.errno
+         if result == errno.ENOENT:
+-            print >> sys.stderr, args[0] + ':',e.strerror
+-            print >> sys.stderr, 'Is your PATH set correctly?'
++            print(args[0] + ':', e.strerror, file=sys.stderr)
++            print('Is your PATH set correctly?', file=sys.stderr)
+         else:
+-            print >> sys.stderr, ' '.join(args), str(e)
++            print(' '.join(args), str(e), file=sys.stderr)
+ 
+     return result
+ 

@@ -1,0 +1,15 @@
+--- a/system/bin/phh-on-boot.sh
++++ b/system/bin/phh-on-boot.sh
+@@ -5,6 +5,12 @@
+ 
+ [ "$(getprop vold.decrypt)" = "trigger_restart_min_framework" ] && exit 0
+ 
++# TB-X505L has 2 GB RAM and a 1 GB zRAM device. Keep this device-specific so
++# the generic GSI is not retuned if it is later reused on another device.
++if getprop ro.vendor.build.fingerprint | grep -q '^Lenovo/TB-X505L/'; then
++    [ -w /proc/sys/vm/page-cluster ] && echo 0 > /proc/sys/vm/page-cluster
++fi
++
+ setprop ctl.start media.swcodec
+ 
+ for i in wpa p2p;do

@@ -1,0 +1,21 @@
+--- a/system/bin/phh-on-data.sh
++++ b/system/bin/phh-on-data.sh
+@@ -1,5 +1,10 @@
+ #!/system/bin/sh
+ 
++if [ -x /system/bin/tb-x505l-lowram-modules.sh ]; then
++    /system/bin/tb-x505l-lowram-modules.sh || \
++        echo "codex-lowram: early module hook failed" > /dev/kmsg
++fi
++
+ vndk="$(getprop persist.sys.vndk)"
+ [ -z "$vndk" ] && vndk="$(getprop ro.vndk.version |grep -oE '^[0-9]+')"
+ 
+@@ -13,7 +18,6 @@
+     setprop media.settings.xml "/vendor/etc/media_profiles_vendor.xml"
+ fi
+ 
+-
+ minijailSrc=/system/system_ext/apex/com.android.vndk.v28/lib/libminijail.so
+ minijailSrc64=/system/system_ext/apex/com.android.vndk.v28/lib64/libminijail.so
+ if [ "$vndk" = 27 ];then

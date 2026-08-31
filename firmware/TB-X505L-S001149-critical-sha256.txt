@@ -1,0 +1,19 @@
+# SHA-256 checksums for critical files from the exact Lenovo factory package:
+# TB_X505L_USR_S001149_2210181723_Q00015_ROW
+#
+# Pass either the package's image directory or its parent package directory to
+# scripts/verify-lenovo-firmware.ps1. These files are identification/recovery
+# metadata only; the Lenovo binaries are not redistributed by this project.
+
+3ec41d9927659b64c34ebbc06001c9ec2c16a5702a8f31e5491a3ae439a3b972  boot.img
+dbc80edd128380b658c3055f0158b1abee8ce4ffca601c348d65cec03f0674de  cache.img
+90268227dfc0198a4fc62c4c7357d9b2450fd258698d432bc228a7a9af99e39f  dtbo.img
+9a328905a4e7b626c4cc8f073cb5cf00d2273c86d10b1c03aab170258e5148af  emmc_appsboot.mbn
+315a64813fe9fc5ea645954df5db5c77d26afc2644115d45bceee8a9f46a1218  NON-HLOS.bin
+45d44ece101d2e3f28cedd58ff9633beb8717edc72b32cea5b8d7313ac018b6e  persist.img
+ff4046fc85c37e169560d7ece594a0e2c1c65014bfdc7703b47e2d29bc499257  recovery-two-step.img
+8bed2a52fc5ab8ba163044aa6e06fcf87afff9682a7b10c30bbbcba9b9d8cf25  recovery.img
+5e4393b3e66eb44f549667c7f40a416013868dfe313bb88af3f9d2bae94f5328  system.img
+5e9ba534505432be1c80735b7d666190a86481710ad158f906a4398786098b41  userdata.img
+ae92fb8e93742ea1b24dad63b9dc5d15683c1bc8639e84f102c538d5c071ba56  vbmeta.img
+1ee5ea2d0257476302a65952612d4b094ec917547f12f0c211d5848ec1854ff1  vendor.img
