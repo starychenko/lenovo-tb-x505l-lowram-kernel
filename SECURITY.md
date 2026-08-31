@@ -7,8 +7,8 @@ This project is an experimental community kernel for an old tablet platform. It 
 - Kernel 4.9 and the tested vendor image are old and do not receive current security fixes here.
 - The bootloader must be unlocked, which changes the device's physical-security model.
 - Lenovo's module-signing private key is unavailable. Every project release,
-  including r7, runs module-signature verification in permissive mode so the
-  stock vendor modules can load.
+  including r7 and r8, runs module-signature verification in permissive mode
+  so the stock vendor modules can load.
 - A user with root can therefore load an unsigned kernel module. Malformed signatures are still rejected.
 - The release's build-generated reproducibility key is deliberately public. It
   is not Lenovo's key, an Android verified-boot key or an account credential.

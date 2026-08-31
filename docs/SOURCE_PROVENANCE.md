@@ -1,5 +1,24 @@
 # Source provenance
 
+## r8-c8 source state
+
+r8-c8 starts at the qualified c3 commit
+`45a98eac292f8b1fbf6f8e5b1130805691327e68` and ends at
+`40a80480379791338dfacb3d8a2b3d755c655bad`, tree
+`bff54dc04e870882f0cac4c5b953d73553c30681`.
+
+`patches/r8-c4-c8/` contains the 17 ordered mail patches and their SHA-256
+manifest. Applying the full series to c3 in a temporary Git index produced the
+exact c8 tree ID. The v1.4.0-rc1 release also contains the complete source
+archive `tb-x505l-r8-c8-source.tar.gz`; its embedded Git archive identity is
+the c8 commit and its SHA-256 is
+`2ccb436209a9ccbc22899986f98d87e5714d643c3d374376e72c791e8fdde9e3`.
+
+The archive has 65,748 entries and excludes `.git`, APKs, built vendor modules,
+device backups and proprietary Lenovo firmware. It therefore remains
+rebuildable even if a donor branch disappears without redistributing the
+tablet's private or proprietary data.
+
 ## r8-c3 source delta
 
 r8-c3 starts at the published c2 commit
@@ -104,7 +123,7 @@ CLANG_TRIPLE=aarch64-linux-gnu-
 CROSS_COMPILE=aarch64-linux-android-4.9/bin/aarch64-linux-android-
 ```
 
-Build user, host and timestamp are pinned separately for r5/r6/r7 in
+Build user, host and timestamp are pinned separately for r5/r6/r7/r8 in
 [BUILD.md](BUILD.md).
 
 The release also archives both exact prebuilt toolchain directories, including
@@ -114,8 +133,11 @@ branch.
 
 ## Release source archives
 
-Each GitHub Release includes a complete corresponding source tarball rather
-than only a link to an external branch. The r5/r6 source includes:
+The r5 and r7 releases plus v1.4.0-rc1 include complete corresponding source
+tarballs rather than only links to external branches. r6 reuses the archived
+r5 source with its own config, while the c2/c3 pre-releases are reconstructable
+from the archived r7 source plus their exact published patches. The r5/r6
+source includes:
 
 - the frozen Lenovo/CAF source state;
 - all r5 changes already applied;
@@ -136,6 +158,10 @@ The v1.2.0 archive independently preserves the final 4.9.337 tree at
 `ddb6b6277eedc4f0c45c55a2196d1fb5ffb1fe15409e86a4568124d099845fac`.
 It was created with `git archive` directly from that clean commit. Its checksum
 is included in the release `SHA256SUMS.txt`.
+
+The v1.4.0-rc1 archive independently preserves the final c8 tree at
+`40a804803797...`; the release manifest covers that archive, the flashable
+image, raw build outputs, patch series and privacy-reviewed evidence.
 
 No `.git` object database, build output, Lenovo firmware, proprietary module or
 device backup is placed in the source archive. Git commit IDs and the full

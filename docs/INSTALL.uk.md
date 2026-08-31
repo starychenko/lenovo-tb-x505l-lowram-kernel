@@ -10,14 +10,24 @@
 
 ## Перевірка завантаженого файла
 
+Оберіть один образ і завантажте його разом із `SHA256SUMS.txt` з того самого
+GitHub Release:
+
+- stable-відкат: `tb-x505l-lowram-r7-boot.img` із
+  [v1.2.0](https://github.com/starychenko/lenovo-tb-x505l-lowram-kernel/releases/tag/v1.2.0);
+- поточний pre-release: `tb-x505l-r8-c8-thinlto-boot.img` із
+  [v1.4.0-rc1](https://github.com/starychenko/lenovo-tb-x505l-lowram-kernel/releases/tag/v1.4.0-rc1).
+
 ```powershell
 Get-FileHash -Algorithm SHA256 .\tb-x505l-lowram-r7-boot.img
+Get-FileHash -Algorithm SHA256 .\tb-x505l-r8-c8-thinlto-boot.img
 ```
 
-Очікуваний SHA-256:
+Очікувані SHA-256:
 
 ```text
-4c30c952703b5d509953a06c4a66cfee60f08395f06555e2e5027623b9846cc3
+r7     4c30c952703b5d509953a06c4a66cfee60f08395f06555e2e5027623b9846cc3
+r8-c8  b0186ee9d2968051af7224802f8c040332f7672324779f3c91c7f31534d555bf
 ```
 
 Розмір: 67 108 864 байти.
@@ -42,6 +52,12 @@ adb reboot bootloader
 fastboot boot tb-x505l-lowram-r7-boot.img
 ```
 
+Для поточного c8 pre-release команда така:
+
+```text
+fastboot boot tb-x505l-r8-c8-thinlto-boot.img
+```
+
 Ця команда нічого не записує. Перевірте тач, жести, Wi-Fi, звук, обидві камери, мікрофон, заряджання та sleep/wake.
 
 Очікувана діагностика:
@@ -55,9 +71,11 @@ adb shell cat /sys/block/zram0/comp_algorithm
 adb shell cat /sys/kernel/mm/ksm/run
 ```
 
-Має бути `4.9.337-tbx505l-r7-4.9.337-compat-vendor+ #14`, 25 модулів, аудіокарта
-`sdm439-snd-card-mtp`, `[lz4]`, KSM `1` і `[deadline]` у
-`/sys/block/mmcblk0/queue/scheduler`.
+Для r7 має бути `4.9.337-tbx505l-r7-4.9.337-compat-vendor+ #14`, для c8 -
+`4.9.337-tbx505l-r8-c8-thinlto+ #22`. Для обох очікуються 25 модулів,
+аудіокарта `sdm439-snd-card-mtp`, `[lz4]`, KSM `1` і `[deadline]`. У c8 список
+I/O scheduler також містить `bfq`, а
+`/sys/class/kgsl/kgsl-3d0/pmqos_active_latency` повертає `1000`.
 
 ## Постійна прошивка
 
@@ -69,6 +87,13 @@ fastboot flash boot tb-x505l-lowram-r7-boot.img
 fastboot reboot
 ```
 
+Для c8 прошивайте лише вже перевірений тимчасовим запуском образ:
+
+```text
+fastboot flash boot tb-x505l-r8-c8-thinlto-boot.img
+fastboot reboot
+```
+
 Після завантаження звірте записаний розділ:
 
 ```text
@@ -76,8 +101,8 @@ adb root
 adb shell "dd if=/dev/block/by-name/boot bs=1048576 2>/dev/null | sha256sum"
 ```
 
-Результат має починатись із `4c30c952` і повністю збігатись із SHA-256
-завантаженого r7-образу.
+Результат має повністю збігатись із SHA-256 обраного образу:
+`4c30c952...46cc3` для r7 або `b0186ee9...55bf` для c8.
 
 ## Додатковий профіль швидкодії Android 13
 

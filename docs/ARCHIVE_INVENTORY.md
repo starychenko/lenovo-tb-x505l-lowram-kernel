@@ -6,15 +6,15 @@ toolchain later disappears.
 
 ## Stored in the Git repository
 
-- exact baseline, r5, r6 and r7 kernel configurations, including rejected or
-  superseded r6/r7 candidate configs;
-- the complete five-file r5 source patch and the independent r7 camera PM QoS
-  lifecycle patch;
+- exact baseline and r5-r8 kernel configurations, including rejected or
+  superseded candidate configs;
+- the complete five-file r5 source patch, the independent r7 camera PM QoS
+  lifecycle patch and the ordered 17-patch r8 c4-c8 series;
 - build, repack, temporary-boot, validation and recovery scripts;
 - PHH device-hook patch, reversible LineageOS tuning and the measured crDroid
   13 EAS/schedutil profile;
 - native AArch64 benchmark source, Android test wrappers, module-CRC and
-  memory-pressure tools, plus privacy-reviewed generated r6/r7 summaries;
+  memory-pressure tools, plus privacy-reviewed generated r6/r7/r8 summaries;
 - module ABI-analysis tools used during development;
 - source provenance, the staged 4.9.205 -> 4.9.206 -> 4.9.227 -> 4.9.337
   integration history, failed approaches, security trade-offs and physical
@@ -24,8 +24,9 @@ toolchain later disappears.
 
 ## Stored as GitHub Release assets
 
-- final flashable r7 boot image and raw kernel `Image`;
-- config, `System.map`, `Module.symvers` and generated `compile.h`;
+- final flashable r7 image and the qualified r8-c8 pre-release boot image;
+- matching raw `Image`, config, `System.map`, `Module.symvers` and generated
+  `compile.h`;
 - complete corresponding source at r7 commit
   `ca9f99dcda9bc0cf55271157d3a5718ed8cf6e3b`;
 - a tagged project archive with every public script, config, patch and document;
@@ -35,6 +36,10 @@ toolchain later disappears.
 - a privacy-reviewed archive of candidate, ABI, benchmark, memory-pressure,
   permanent-flash and camera evidence;
 - a convenient public-artifact bundle and SHA-256 manifest.
+
+v1.4.0-rc1 additionally stores the complete c8 source archive, ordered patch
+series and privacy-reviewed c8 validation evidence. All 10 files listed by its
+manifest were downloaded again after upload and re-hashed successfully.
 
 Generated `.o` files are not archived individually. They add several gigabytes,
 contain absolute local build paths, and can be regenerated from the preserved
@@ -60,6 +65,6 @@ Also excluded from public storage:
 - screenshots, photographs and UI hierarchy captures;
 - third-party APKs and Magisk binaries.
 
-These exclusions do not prevent rebuilding r5, r6 or r7. Repacking a boot image
+These exclusions do not prevent rebuilding r5, r6, r7 or r8. Repacking a boot image
 still requires each owner to provide a matching boot image from their own
 device or factory package.

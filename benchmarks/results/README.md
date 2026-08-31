@@ -26,3 +26,9 @@ evidence only; it is not presented as a matched r7/r8 performance comparison.
 validation summaries. `r8-c2-vs-c3-summary.csv` is the two-repetition native
 comparison. Small deltas and the variable eMMC results are not treated as
 conclusive; see `docs/R8_ENGINEERING.md` and `docs/PERFORMANCE_DYNAMICS.md`.
+
+`r8-c8/` contains the final production validator, the 512 MiB pressure run,
+five c4/c5 baseline samples, five A53 samples and two five-run ThinLTO sets.
+`targeted-summary.csv` combines all ten ThinLTO samples and keeps the volatile
+eMMC tail regression visible. See `docs/R8_ENGINEERING.md` for the acceptance
+decision and evidence limits.

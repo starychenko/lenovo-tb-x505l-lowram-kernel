@@ -5,7 +5,7 @@ TB-X505L. r7 remains the stable fallback. The permanently tested r8-c8
 pre-release extends the r8 feature pack with scheduler/KGSL latency work,
 optimized ARM64 paths, optional BFQ and an A53-targeted ThinLTO build.
 
-[Українська версія](README.uk.md) · [Installation](docs/INSTALL.md) · [Build](docs/BUILD.md) · [r8 engineering](docs/R8_ENGINEERING.md) · [Performance dynamics](docs/PERFORMANCE_DYNAMICS.md) · [r7 engineering](docs/R7_ENGINEERING.md) · [Camera HAL logging](docs/CAMERA_HAL_LOGGING.md) · [Archive inventory](docs/ARCHIVE_INVENTORY.md)
+[Українська версія](README.uk.md) · [Installation](docs/INSTALL.md) · [Build](docs/BUILD.md) · [r8 engineering](docs/R8_ENGINEERING.md) · [Kernel roadmap](docs/KERNEL_ROADMAP.uk.md) · [Performance dynamics](docs/PERFORMANCE_DYNAMICS.md) · [r7 engineering](docs/R7_ENGINEERING.md) · [Camera HAL logging](docs/CAMERA_HAL_LOGGING.md) · [Archive inventory](docs/ARCHIVE_INVENTORY.md)
 
 ## Read this first
 
@@ -115,6 +115,9 @@ adb reboot bootloader
 fastboot boot tb-x505l-lowram-r7-boot.img
 ```
 
+For the c8 pre-release selected in step 1, use
+`fastboot boot tb-x505l-r8-c8-thinlto-boot.img` instead.
+
 5. Verify all hardware. Only then flash permanently:
 
 ```text
@@ -122,6 +125,9 @@ adb reboot bootloader
 fastboot flash boot tb-x505l-lowram-r7-boot.img
 fastboot reboot
 ```
+
+For c8, substitute `tb-x505l-r8-c8-thinlto-boot.img`. Never flash a candidate
+that did not first complete the temporary hardware test.
 
 The tested tablet has a faulty Volume Up button, so all recovery-safe paths use `adb reboot bootloader` when Android is still available. Full instructions and rollback steps are in [docs/INSTALL.md](docs/INSTALL.md).
 

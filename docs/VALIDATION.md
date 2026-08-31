@@ -1,4 +1,8 @@
-# Validation record
+# r5 validation record (historical)
+
+This file preserves the original r5 qualification. Current r8-c8 validation,
+hashes and evidence limits are in [R8_ENGINEERING.md](R8_ENGINEERING.md) and
+the [r8-c8 evidence index](../benchmarks/results/r8-c8/README.md).
 
 ## Artifact identity
 

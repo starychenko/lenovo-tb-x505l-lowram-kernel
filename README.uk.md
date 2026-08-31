@@ -89,6 +89,9 @@ adb reboot bootloader
 fastboot boot tb-x505l-lowram-r7-boot.img
 ```
 
+Для поточного c8 pre-release використовуйте
+`fastboot boot tb-x505l-r8-c8-thinlto-boot.img`.
+
 Після перевірки всього заліза прошити постійно:
 
 ```text
@@ -96,6 +99,9 @@ adb reboot bootloader
 fastboot flash boot tb-x505l-lowram-r7-boot.img
 fastboot reboot
 ```
+
+Для c8 підставте `tb-x505l-r8-c8-thinlto-boot.img`. Не прошивайте кандидат,
+який перед цим не пройшов тимчасовий запуск і перевірку всього заліза.
 
 Повна інструкція з backup і rollback: [docs/INSTALL.uk.md](docs/INSTALL.uk.md).
 
@@ -108,7 +114,7 @@ fastboot reboot
 - скрипти збірки, repack і перевірки;
 - повний технічний опис усіх вдалих і невдалих підходів;
 - `boot.img`, raw `Image`, `System.map`, `Module.symvers`;
-- повний corresponding source archive;
+- повний архів відповідних вихідних кодів;
 - точні Clang/GCC toolchain-и та матеріали для відтворюваної збірки;
 - SHA-256 для всіх артефактів.
 

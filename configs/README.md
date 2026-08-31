@@ -30,8 +30,23 @@
   changes because c3's scheduler, reclaim, compaction and I2C work is in the
   source patch. Its SHA-256 is
   `a7b9cb80d60cca83306e897647c49571033427c9ced57b36858a6b62ea996005`.
+- `tb-x505l-r8-c4c5.config` is the scheduler/KGSL plus ARM64/mremap candidate
+  input config. SHA-256:
+  `71f886f5e36ead426f010353d8093acfc2afffb2fb2c4929be4bf8331c98d788`.
+- `tb-x505l-r8-c6-bfq.config` adds BFQ v8r10 as selectable while retaining
+  `deadline` as default. SHA-256:
+  `01d479cc54bfea4cb095ddfd9dd1bed37a83fe453bae8347e4d3a9d072344dd8`.
+- `tb-x505l-r8-c7-power.config` is the SDM429 KGSL power-vote candidate.
+  SHA-256:
+  `0d4f4efbc911a48227bc97140a8abe823a1070d69674b3756b1649526a5143dc`.
+- `tb-x505l-r8-c8-a53.config` is the normalized A53/inlining control config.
+  SHA-256:
+  `0f24871274adf110d2de63935de89621f1556e64ee6694824ae9b9a4f384c2b6`.
+- `tb-x505l-r8-c8-thinlto.config` is the exact permanently qualified c8
+  ThinLTO config. SHA-256:
+  `06571aa81ec85ee3a781d7439816859b36338ade28f00c3608acb06c893deb2f`.
 
-Important delta:
+Low-RAM base delta retained by every later candidate:
 
 ```text
 CONFIG_PSI=y
@@ -47,6 +62,7 @@ CONFIG_LZ4_DECOMPRESS=y
 
 Do not merge fragments into an arbitrary Qualcomm 4.9 config and assume ABI
 compatibility. The final r7 config is tied to source commit `ca9f99dc...`; the
-r8-c2 is tied to `476936bf...`; c3 is tied to `45a98eac...`. Reconstruct c3
-from the exact r7 base by applying the published c2 patch followed by the c3
-incremental patch.
+r8-c2 is tied to `476936bf...`; c3 is tied to `45a98eac...`; final c8 is tied
+to `40a804803797...`. Reconstruct c8 from the exact r7 base by applying the c2
+patch, the c3 incremental patch and then the ordered `patches/r8-c4-c8/`
+series.

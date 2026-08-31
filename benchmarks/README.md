@@ -1,7 +1,8 @@
-# TB-X505L r6 benchmark suite
+# TB-X505L benchmark suite
 
-The r6 evaluation does not use one aggregate benchmark as proof. It separates
-the subsystems changed by each experiment and records workload-specific
+The harness originated during r6 and remains the project benchmark suite
+through r8-c8. It does not use one aggregate score as proof; it separates the
+subsystems changed by each experiment and records workload-specific
 regressions as well as gains.
 
 Privacy-reviewed generated summaries are published in `results/`. Full local

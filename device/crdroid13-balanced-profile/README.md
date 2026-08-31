@@ -107,3 +107,7 @@ reduced cross-core wake-up mean latency by roughly 7-9% and loaded p95 by about
 2%, without a measurable single-thread throughput loss. The r8 profile keeps
 the kernel ABI unchanged and applies that reversible runtime policy instead of
 compiling out `SCHEDSTATS`/`SCHED_INFO`.
+
+The same nine production values were read back by the full validator after the
+permanent r8-c8 boot. This confirms application of the profile on c8; it is not
+a new PCMark or battery-life measurement.

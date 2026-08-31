@@ -5,8 +5,8 @@
 The qualified system combines components from different Android generations:
 
 - Lenovo Android 10 vendor partition and proprietary firmware;
-- Linux 4.9.337 r7 kernel with compatibility for the shipping 4.9.205-era
-  vendor modules;
+- Linux 4.9.337 r8-c8 kernel, with r7 retained as the stable fallback, and
+  compatibility for the shipping 4.9.205-era vendor modules;
 - crDroid 9.10 Android 13 PHH GSI system image (with the original Android 11
   qualification retained in `VALIDATION.md`);
 - 2 GB physical RAM and a 1 GiB zRAM swap device.
